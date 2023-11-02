@@ -1,6 +1,6 @@
 {
   "name": "@gdquest/process-course-utils",
-  "version": "0.0.67b",
+  "version": "0.0.7",
   "description": "A set of utilities to process courses and godot projects. Intended for use within the GDQuest team",
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
