@@ -81,7 +81,16 @@ export const componentsMap = {
       `</span></span>`
     );
   },
-  VideoEmbed: ({ url }: { url: string }) => {
+  VideoEmbed: ({
+    url,
+    title = "youtube video player",
+  }: {
+    url: string;
+    title?: string;
+  }) => {
+    if (!url) {
+      throw new Error("No `url` property provided for VideoEmbed");
+    }
     const youtubeUrlRegex =
       /(?:youtube\.com(?:\/watch\?.*v=|\/embed\/)|youtu\.be\/)(?<videoId>[a-zA-Z_\d-]+)\??/;
     //const vimeoUrlRegex =
@@ -96,14 +105,14 @@ export const componentsMap = {
       return "";
     }
 
-    return (
-      `<iframe className="gdquest-video-embed"` +
-      `src="https://www.youtube.com/embed/${YoutubeVideoId}"` +
-      `title="YouTube video player"` +
-      `allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"` +
-      `allowFullScreen` +
-      `/>`
-    );
+    return [
+      `<iframe className="gdquest-video-embed"`,
+      `src="https://www.youtube.com/embed/${YoutubeVideoId}"`,
+      `title="${title}"`,
+      `allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"`,
+      `allowFullScreen`,
+      `/>`,
+    ].join(" ");
   },
   VideoFile: ({ src }: { src: string }) => {
     if (src === "") {
