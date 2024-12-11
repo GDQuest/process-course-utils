@@ -7,7 +7,7 @@ export * from "./escapeHTML.ts";
 export * from "./eta.ts";
 export * from "./extractTextBetweenDelimiters.ts";
 export * from "./extractTypescriptTypeDefinitionFromFile.ts";
-export * from "./getImageInfoFromFrontmatter.ts";
+export * from "./getImageInfoFromMarkdown.ts";
 export * from "./getImageDimensions/mod.ts";
 export * from "./getLogger.ts";
 export * from "./transformCustomHTMLTags/godotShortcut.ts";
