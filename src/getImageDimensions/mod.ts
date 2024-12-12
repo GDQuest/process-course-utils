@@ -50,6 +50,11 @@ export const getImageDimensionsFromStream = async (
   }
 };
 
+/**
+ * Only reads the first few bytes of the file, just enough to get the necessary information to get its dimensions.
+ * @param file
+ * @returns
+ */
 export const getImageDimensionsFromFile = async (file: Deno.FsFile) => {
   const readable = file.readable.getReader();
   const chunks: number[] = [];
@@ -68,6 +73,11 @@ export const getImageDimensionsFromFile = async (file: Deno.FsFile) => {
   }
 };
 
+/**
+ * Loads a file and returns its dimensions. Only reads the first few bytes of the file, just enough to get the necessary information.
+ * @param path
+ * @returns
+ */
 export const getImageDimensionsFromFilePath = async (path: string) => {
   const file = await Deno.open(path, { read: true });
   const dimensions = await getImageDimensionsFromFile(file);
@@ -75,6 +85,12 @@ export const getImageDimensionsFromFilePath = async (path: string) => {
   return dimensions;
 };
 
+/**
+ * Utility to add additional information to image dimensions.
+ * It adds the aspect ratio `ratio` (as a number) and the aspect ratio type `aspectRatio` (as a string)
+ * @param dimensions
+ * @returns
+ */
 export function augmentImageDimensions(
   dimensions: ImageDimensions
 ): ImageDimensionsAugmented {

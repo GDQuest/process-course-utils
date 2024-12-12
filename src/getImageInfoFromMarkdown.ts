@@ -4,6 +4,13 @@ import {
   augmentImageDimensions,
 } from "./getImageDimensions/mod.ts";
 
+/**
+ * Given an image src relative to a file, returns size information about the image.
+ * @param imageHTMLSrc
+ * @param markdownFilePath
+ * @param rootDirectoryPath
+ * @returns
+ */
 export async function getImageInfoFromMarkdown(
   imageHTMLSrc: string,
   markdownFilePath: string,

@@ -1,6 +1,6 @@
 import { resolve } from "jsr:@std/path@^1.0.7/resolve";
 import * as cli from "jsr:@std/cli";
-import { ConsoleHandler, setup as setupLogger } from "jsr:@std/log";
+import { ConsoleHandler, LogRecord, setup as setupLogger } from "jsr:@std/log";
 
 /**
  * A structure that describes a flag that can be passed to a CLI program.
@@ -172,13 +172,33 @@ export function parseFlags<
   } as const;
 }
 
+const levelIcons: Record<LogRecord["levelName"], string> = {
+  DEBUG: "-",
+  INFO: "ℹ️",
+  WARNING: "⚠️",
+  ERROR: "❌",
+  CRITICAL: "🆘",
+} as const;
+
 export function enableConsoleLogging(name: string) {
   setupLogger({
     handlers: {
-      console: new ConsoleHandler("DEBUG"),
+      console: new ConsoleHandler("DEBUG", {
+        formatter(logRecord) {
+          const { levelName, loggerName, args, msg } = logRecord;
+          return (
+            `${levelIcons[levelName]} [${loggerName}] ${msg}` +
+            (args && args.length ? `${JSON.stringify(args, null, 2)}` : "")
+          );
+        },
+      }),
     },
     loggers: {
       [name]: {
+        level: "DEBUG",
+        handlers: ["console"],
+      },
+      [`${name}:Server`]: {
         level: "DEBUG",
         handlers: ["console"],
       },

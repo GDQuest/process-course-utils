@@ -1,4 +1,5 @@
 export * from "./cliHelpers.ts";
+export * from "./devServer/mod.ts";
 export * from "./downloadAndExtractFile.ts";
 export * from "./ensureBinaryExistsOrDownload.ts";
 export * from "./ensureDirExists.ts";

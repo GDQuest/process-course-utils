@@ -2,6 +2,11 @@ import { type ZodError } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 
 export * from "https://deno.land/x/zod@v3.23.8/mod.ts";
 
+/**
+ * Pretty prints a Zod error
+ * @param printError
+ * @param error
+ */
 export function printZodError<K, T extends ZodError<K>>(
   printError: (message: string) => void,
   error: T

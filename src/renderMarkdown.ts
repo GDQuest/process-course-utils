@@ -163,6 +163,11 @@ function remarkCustomComponentExtractor(
   return plugin;
 }
 
+/**
+ * Uses unified to process markdown string. Does not handle frontmatter; split it out before calling this function.
+ * @param markdownString
+ * @returns
+ */
 export async function renderMarkdown(markdownString: string) {
   // Process the markdown
   const file = await unified()

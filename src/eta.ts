@@ -1,9 +1,13 @@
-import { ensureDirSync } from "jsr:@std/fs@^1.0.5/ensure-dir";
 import { Eta, type EtaConfig } from "jsr:@eta-dev/eta@3.5.0";
 import { existsSync } from "jsr:@std/fs@^1.0.5/exists";
 
 export { Eta, EtaConfig };
 
+/**
+ * Returns an Eta instance with the given views directory and configuration.
+ * @param viewsDirectory the directory containing all the templates
+ * @param config an optional configuration object
+ */
 export const makeEta = (
   viewsDirectory: string,
   config?: Partial<EtaConfig>
