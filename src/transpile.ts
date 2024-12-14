@@ -9,9 +9,8 @@ import {
  * @returns
  */
 export const typescriptTranspile = async (filePath: string | URL) => {
-  const url = new URL(filePath);
-  const result = await _transpile(url);
-  return result.get(url.href);
+  const result = await _transpile(filePath);
+  return result.get(filePath instanceof URL ? filePath.href : filePath);
 };
 
 /**
