@@ -5,51 +5,49 @@ import {
   basename as getBasename,
   extname,
   dirname as getDirname,
+  relative as getRelative,
 } from "jsr:@std/path";
-import { type WalkOptions } from "jsr:@std/fs";
 
 export function toPathString(pathUrl: string | URL): string {
   return pathUrl instanceof URL ? fromFileUrl(pathUrl) : pathUrl;
 }
 
-function shouldInclude(
-  path: string,
-  exts?: string[],
-  match?: RegExp[],
-  skip?: RegExp[]
-): boolean {
-  if (exts && !exts.some((ext): boolean => path.endsWith(ext))) {
-    return false;
-  }
-  if (match && !match.some((pattern): boolean => !!path.match(pattern))) {
-    return false;
-  }
-  if (skip && skip.some((pattern): boolean => !!path.match(pattern))) {
-    return false;
-  }
-  return true;
-}
-
-async function walkEntryFromPath(
-  path: string | URL | WalkEntry
+export async function getFileInfo(
+  path: string | URL | WalkEntry,
+  rootPath: string | URL = Deno.cwd()
 ): Promise<WalkEntry> {
   if (typeof path === "object") {
     return path as WalkEntry;
   }
   path = toPathString(path);
   path = normalize(path);
+
+  rootPath = toPathString(rootPath);
+  rootPath = normalize(rootPath);
+
   const name = getBasename(path);
   const stat = await Deno.stat(path);
+  const relativePath = getRelative(rootPath, path);
+  const pathParts = relativePath.split("/");
+
+  const common = {
+    path,
+    name,
+    relativePath,
+    pathParts,
+    isFile: stat.isFile,
+    isDirectory: stat.isDirectory,
+    isSymlink: stat.isSymlink,
+    realPath: await Deno.realPath(path),
+  };
+
   if (stat.isDirectory) {
     return {
-      path,
-      name,
-      isFile: stat.isFile,
-      isDirectory: stat.isDirectory,
-      isSymlink: stat.isSymlink,
+      ...common,
+      isDirectory: true,
       files: [],
       directories: [],
-      realPath: await Deno.realPath(path),
+      nodes: [],
     };
   }
   const ext = extname(name);
@@ -57,15 +55,13 @@ async function walkEntryFromPath(
   const dirname = getDirname(path);
   const basename = getBasename(name, ext);
   return {
+    ...common,
+    isDirectory: false,
     path,
     name,
     dirname,
     extension,
     basename,
-    isFile: stat.isFile,
-    isDirectory: stat.isDirectory,
-    isSymlink: stat.isSymlink,
-    realPath: await Deno.realPath(path),
   };
 }
 
@@ -77,6 +73,8 @@ type WalkEntryBase = Deno.DirEntry & {
   path: string;
   /** The real path of the entry. Equivalent for most files, but is different for Symlinks */
   realPath: string;
+  relativePath: string;
+  pathParts: string[];
 };
 
 /** A file walk entry. */
@@ -97,6 +95,7 @@ export type DirWalkEntry = WalkEntryBase & {
   files: FileWalkEntry[];
   /** The directories in the directory. */
   directories: DirWalkEntry[];
+  nodes: WalkEntry[];
 };
 
 /** A walk entry that is either a file or a directory. */
@@ -105,148 +104,98 @@ export type WalkEntry = FileWalkEntry | DirWalkEntry;
 /**
  * Resolved options for the walk function, with defaults filled in.
  */
-export type WalkOptionsRequired = WalkOptions &
-  Required<
-    Pick<
-      WalkOptions,
-      | "maxDepth"
-      | "includeFiles"
-      | "includeDirs"
-      | "includeSymlinks"
-      | "followSymlinks"
-      | "canonicalize"
-    >
-  >;
+export type WalkOptions = {
+  /**
+   * The maximum depth of the file tree to be walked recursively.
+   *
+   * @default {Infinity}
+   */
+  maxDepth: number;
+  /**
+   * Indicates whether symlinks should be resolved or not.
+   *
+   * @default {false}
+   */
+  followSymlinks: boolean;
+
+  root: string;
+};
+
+type InternalProcessor = (
+  entry: WalkEntry,
+  options: WalkOptions
+) => Promise<void>;
 
 /**
  *
  * Deno's [`walk`](https://jsr.io/@std/fs/doc/~/walk) function is nice, but it can't be short-circuited.
  *
- * This function keeps feature parity and the same API, but uses a functor instead of a generator.
- *
- * A few important distinctions:
- * 1. the functor will **not** automatically recurse into directories.To recurse, call the provided `process()` function in the functor.
- * 2. `maxDepth` is not respected. The value does get decremented, but it is up to the functor to respect it.
- * 3. The returned `WalkEntry` objects have a `realPath` property that is the resolved path of the entry.
- *    If you want to follow symlinks, you should always use `realPath`, which resolves correctly for all entry types.
- * 4. `canonicalize` is always `true`. This is because the `realPath` is always needed to determine if a symlink is a directory or file.
+ * The functor will **not** automatically recurse into directories.
  *
  */
 export async function walk<T>(
   root: string | URL,
-  options: WalkOptions = {},
+  options: Partial<Omit<WalkOptions, "root">> = {},
   functor: (
-    entry: WalkEntryBase,
-    options: WalkOptionsRequired & {
-      process: (entry: WalkEntry) => Promise<void>;
-    }
-  ) => void | Promise<void>
+    entry: WalkEntry,
+    options: WalkOptions
+  ) => void | WalkEntry[] | Promise<void | WalkEntry[]>
 ): Promise<void> {
-  const {
-    maxDepth = Infinity,
-    includeFiles = true,
-    includeDirs = true,
-    includeSymlinks = true,
-    followSymlinks = false,
-    canonicalize = true,
-    match = undefined,
-    skip = undefined,
-  } = options;
+  const { maxDepth = Infinity, followSymlinks = false } = options;
 
   root = toPathString(root);
 
-  const exts = options?.exts?.map((ext) =>
-    ext.startsWith(".") ? ext : `.${ext}`
+  const functorWrapper = async (entry: WalkEntry, options: WalkOptions) => {
+    const files = await functor(entry, options);
+    if (files) {
+      await Promise.all(files.map(walker));
+    }
+  };
+
+  const rootWalkEntry = await getFileInfo(root, root);
+
+  const opts = { maxDepth, followSymlinks, root };
+
+  const walker = _walk.bind(null, functorWrapper, opts);
+
+  if (!rootWalkEntry.isDirectory) {
+    throw new Error(`Root entry is not a directory: ${root}`);
+  }
+  await _readDirIntoWalkEntry(rootWalkEntry, opts);
+  await Promise.all(
+    [...rootWalkEntry.files, ...rootWalkEntry.directories].map(walker)
   );
-
-  const opts = {
-    maxDepth,
-    includeFiles,
-    includeDirs,
-    includeSymlinks,
-    followSymlinks,
-    canonicalize,
-    match,
-    skip,
-    exts,
-  };
-
-  const functorWrapper = async (
-    entry: WalkEntryBase,
-    options: WalkOptionsRequired
-  ) => {
-    const process = bindedWalk.bind(null, options);
-    await functor(entry, { ...options, process });
-  };
-
-  const bindedWalk = _walk.bind(null, functorWrapper);
-
-  await bindedWalk(opts, root);
+  return;
 }
 
 async function _walk(
-  processEntry: (
-    entry: WalkEntry,
-    options: WalkOptionsRequired
-  ) => Promise<void>,
-  options: WalkOptionsRequired,
-  root: string | WalkEntry
+  processEntry: InternalProcessor,
+  options: WalkOptions,
+  entry: WalkEntry
 ) {
-  const rootWalkEntry = await walkEntryFromPath(root);
-
-  const {
-    maxDepth,
-    includeFiles,
-    includeDirs,
-    includeSymlinks,
-    followSymlinks,
-    match,
-    skip,
-    exts,
-  } = options;
-
-  if (!shouldInclude(rootWalkEntry.path, exts, match, skip)) {
-    return;
+  if (
+    entry.isDirectory ||
+    (entry.isSymlink && options.followSymlinks && entry.isDirectory)
+  ) {
+    const opts = { ...options, maxDepth: options.maxDepth - 1 };
+    await _readDirIntoWalkEntry(entry, opts);
   }
+  return await processEntry(entry, options);
+}
 
-  if (rootWalkEntry.isDirectory) {
-    if (!includeDirs) {
-      return;
-    }
+async function _readDirIntoWalkEntry(
+  entry: DirWalkEntry,
+  options: WalkOptions
+): Promise<void> {
+  for await (const dirEntry of Deno.readDir(entry.realPath)) {
+    const path = join(entry.path, dirEntry.name);
+    const childWalkEntry = await getFileInfo(path, options.root);
 
-    for await (const dirEntry of Deno.readDir(rootWalkEntry.realPath)) {
-      const path = join(rootWalkEntry.path, dirEntry.name);
-      const childWalkEntry = await walkEntryFromPath(path);
-      if (childWalkEntry.isSymlink && !includeSymlinks) {
-        continue;
-      }
-      if (
-        childWalkEntry.isDirectory &&
-        includeDirs &&
-        shouldInclude(path, undefined, match, skip)
-      ) {
-        rootWalkEntry.directories.push(childWalkEntry);
-        continue;
-      } else if (includeFiles && shouldInclude(path, exts, match, skip)) {
-        rootWalkEntry.files.push(childWalkEntry as FileWalkEntry);
-      }
+    if (childWalkEntry.isDirectory) {
+      entry.directories.push(childWalkEntry);
+    } else {
+      entry.files.push(childWalkEntry as FileWalkEntry);
     }
-    const opts = { ...options, maxDepth: maxDepth - 1 };
-    return await processEntry(rootWalkEntry, opts);
-  }
-  if (rootWalkEntry.isSymlink) {
-    if (!includeSymlinks) {
-      return;
-    }
-    if (followSymlinks) {
-      return await _walk(processEntry, options, rootWalkEntry);
-    }
-    return await processEntry(rootWalkEntry, options);
-  }
-  if (!includeFiles) {
-    return;
-  }
-  if (rootWalkEntry.isFile) {
-    return await processEntry(rootWalkEntry, options);
+    entry.nodes.push(childWalkEntry);
   }
 }

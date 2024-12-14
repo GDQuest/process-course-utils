@@ -1,4 +1,4 @@
-import { dirname, join, relative } from "jsr:@std/path";
+import { dirname, join, relative as getRelative } from "jsr:@std/path";
 import {
   getImageDimensionsFromFilePath,
   augmentImageDimensions,
@@ -26,7 +26,7 @@ export async function getImageInfoFromMarkdown(
     return {
       ...augmentImageDimensions(imageInfo),
       filePath,
-      relPath: relative(rootDirectoryPath, filePath),
+      relPath: getRelative(rootDirectoryPath, filePath),
       originalSrc: imageHTMLSrc,
     };
   }
