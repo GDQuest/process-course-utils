@@ -15,6 +15,8 @@ export * from "./transformCustomHTMLTags/godotShortcut.ts";
 export * from "./hash.ts";
 export * from "./isPlainObject.ts";
 export * from "./logMissingReferencesToConsole.ts";
+export * from "./maybeStringArraySchema.ts";
+export * from "./parseHTMLAttributes.ts";
 export * from "./parseMarkdownFile.ts";
 export * from "./prepareDataLinks.ts";
 export * from "./parseStringArray.ts";

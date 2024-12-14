@@ -22,6 +22,13 @@ export interface FlagSpecification {
   description: string;
 }
 
+export interface FlagsSeparator {
+  type: "separator";
+  description: string;
+}
+
+export type FlagsSpecificationList = (FlagSpecification | FlagsSeparator)[];
+
 /**
  * A list of flag specifications that are always present in every CLI program.
  */
@@ -48,9 +55,13 @@ function buildParseOptions<
     string,
     string | boolean
   >
->(flagsSpecifications: FlagSpecification[], default_options: TDefault) {
+>(flagsSpecifications: FlagsSpecificationList, default_options: TDefault) {
   return flagsSpecifications.reduce(
-    (acc, { name, alias, type }) => {
+    (acc, spec) => {
+      if (spec.type === "separator") {
+        return acc;
+      }
+      const { name, alias, type } = spec;
       acc.alias[name] = alias;
       if (type === "path") {
         acc.string.push(name);
@@ -87,7 +98,7 @@ interface ParseFlagsOptions<
   /** A description of the CLI program. Used for the help text */
   description: string;
   /** The flag specifications for the CLI program */
-  spec: FlagSpecification[];
+  spec: FlagsSpecificationList;
   /** The default options for the CLI, if none are passed. This is passed as-is to Deno's `cli.parseArgs` */
   default: TDefault;
 }
@@ -158,7 +169,11 @@ export function parseFlags<
     }
     printFn(`Options:`);
     let longest = 0;
-    const lines = spec.map(({ name, alias, description }) => {
+    const lines = spec.map((spec) => {
+      if (spec.type === "separator") {
+        return { commands: "", description: spec.description };
+      }
+      const { name, alias, description } = spec;
       const commands =
         alias.length === 0
           ? `--${name}`
@@ -171,7 +186,12 @@ export function parseFlags<
       return { commands, description };
     });
     lines.forEach(({ commands, description }) => {
-      printFn(`  ${commands.padEnd(longest, " ")}  ${description}`);
+      if (commands === "") {
+        printFn(``);
+        printFn(`${description}`);
+      } else {
+        printFn(`  ${commands.padEnd(longest, " ")}  ${description}`);
+      }
     });
     printFn(``);
   };
