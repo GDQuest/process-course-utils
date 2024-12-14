@@ -15,11 +15,22 @@ export const typescriptTranspile = async (filePath: string | URL) => {
 };
 
 /**
- * Bundles a typescript file with its dependencies into a single javascript file
+ * Bundles a typescript file with its dependencies into a single javascript source string
  * @param filePath
  * @returns
  */
 export const typeScriptBundle = async (filePath: string | URL) => {
-  const url = new URL(filePath);
-  return await _bundle(url);
+  return await _bundle(filePath);
+};
+
+export const typescriptBundleAndWrite = async (
+  filePath: string | URL,
+  outFile: string | URL,
+  dryRun: boolean
+) => {
+  const { code } = await _bundle(filePath);
+  if (dryRun) {
+    return;
+  }
+  await Deno.writeTextFile(outFile, code);
 };

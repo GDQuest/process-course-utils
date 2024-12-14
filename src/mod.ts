@@ -23,6 +23,8 @@ export * from "./parseStringArray.ts";
 export * from "./preprocessMdxWithBinary.ts";
 export * from "./processMarkdownFile.ts";
 export * from "./renderMarkdown.ts";
+export * from "./transpile.ts";
+export * from "./watch.ts";
 export * from "./sass.ts";
 export * from "./slugify.ts";
 export * from "./prepareGlossaryEntryLink.ts";
