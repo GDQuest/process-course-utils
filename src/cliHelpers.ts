@@ -11,7 +11,7 @@ export interface FlagSpecification {
   /* The aliases for the flag. The first one is the short version, the second one is the long version. If the longer version
    * is not supplied, `name` is used.
    */
-  alias: [string, string] | [string];
+  alias: [string, string] | [string] | [];
   /* The type of the flag. This can be one of three values:
    * - "boolean": The flag is a boolean flag. It can be passed or not passed. If passed, it is `true`, otherwise it is `false`.
    * - "string": The flag is a string flag. It must be passed with a value, e.g. `--flag value`.
@@ -49,7 +49,7 @@ function buildParseOptions<
     string | boolean
   >
 >(flagsSpecifications: FlagSpecification[], default_options: TDefault) {
-  return [...alwaysPresentFlags, ...flagsSpecifications].reduce(
+  return flagsSpecifications.reduce(
     (acc, { name, alias, type }) => {
       acc.alias[name] = alias;
       if (type === "path") {
@@ -104,9 +104,11 @@ export function parseFlags<
   name,
   importMetaUrl,
   description,
-  spec,
+  spec: specRaw,
   default: defaultOptions,
 }: ParseFlagsOptions) {
+  const spec = [...alwaysPresentFlags, ...specRaw];
+
   const parseOptions = buildParseOptions(spec, defaultOptions);
   /** the parsed final flags */
   const flags = cli.parseArgs(Deno.args, parseOptions) as T;
@@ -155,10 +157,21 @@ export function parseFlags<
       printFn(``);
     }
     printFn(`Options:`);
-    spec.forEach(({ name, alias, description }) => {
-      printFn(
-        `  -${alias[0]}, --${(alias[1] || name).padEnd(15)} ${description}`
-      );
+    let longest = 0;
+    const lines = spec.map(({ name, alias, description }) => {
+      const commands =
+        alias.length === 0
+          ? `--${name}`
+          : alias.length === 1
+          ? alias[0].length === 1
+            ? `-${alias[0]}, --${name}`
+            : `--${alias[0]}`
+          : `-${alias[0]}, --${alias[1]}`;
+      longest = Math.min(Math.max(longest, commands.length), 50);
+      return { commands, description };
+    });
+    lines.forEach(({ commands, description }) => {
+      printFn(`  ${commands.padEnd(longest, " ")}  ${description}`);
     });
     printFn(``);
   };

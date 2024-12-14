@@ -21,6 +21,7 @@ export * from "./parseStringArray.ts";
 export * from "./preprocessMdxWithBinary.ts";
 export * from "./processMarkdownFile.ts";
 export * from "./renderMarkdown.ts";
+export * from "./sass.ts";
 export * from "./slugify.ts";
 export * from "./prepareGlossaryEntryLink.ts";
 export * from "./transformCustomHTMLTags/transformCustomHTMLTags.ts";
