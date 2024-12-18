@@ -39,6 +39,18 @@ export const resourceLinkInputSchema = z.object({
   url: z.string(),
   label: z.string().optional(),
   external: z.boolean().optional(),
+  platform: z
+    .union([
+      z.literal("windows"),
+      z.literal("mac"),
+      z.literal("linux"),
+      z.literal("web"),
+      z.literal("android"),
+      z.literal("ios"),
+      z.literal("all"),
+      z.literal("other"),
+    ])
+    .optional(),
 });
 
 export const resourceLinkValidInput = z.union([
@@ -52,6 +64,15 @@ export type ResourceLink = {
   label: string;
   url: string;
   external: boolean;
+  platform?:
+    | "windows"
+    | "mac"
+    | "linux"
+    | "web"
+    | "android"
+    | "ios"
+    | "all"
+    | "other";
 };
 
 /**
