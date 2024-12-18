@@ -208,7 +208,7 @@ export function parseFlags<
 const levelIcons: Record<LogRecord["levelName"], string> = {
   DEBUG: "-",
   INFO: "ℹ️",
-  WARNING: "⚠️",
+  WARN: "⚠️",
   ERROR: "❌",
   CRITICAL: "🆘",
 } as const;
