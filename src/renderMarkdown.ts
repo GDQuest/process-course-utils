@@ -1,5 +1,5 @@
 import { type Plugin, unified } from "https://esm.sh/unified@11.0.4";
-import type { Html, Node, Root } from "npm:@types/mdast";
+import type { Html, Node, Root, RootContent } from "npm:@types/mdast";
 import {
   type MdxJsxAttribute,
   type MdxJsxExpressionAttribute,
@@ -8,10 +8,14 @@ import {
 } from "https://esm.sh/mdast-util-mdx-jsx@3.1.3";
 import remarkParse from "https://esm.sh/remark-parse@11.0.0";
 import remarkRehype from "https://esm.sh/remark-rehype@11.1.1";
+import rehypeUnwrapImages from "https://esm.sh/rehype-unwrap-images@1.0.0";
 import rehypeStringify from "https://esm.sh/rehype-stringify@10.0.0";
 import remarkGfm from "https://esm.sh/remark-gfm@4.0.0";
 import remarkMdx from "https://esm.sh/remark-mdx@3.0.0";
 import { componentsMap } from "./transformCustomHTMLTags/transformCustomHTMLTags.ts";
+import { type Image } from "npm:@types/mdast";
+import { VFile } from "https://esm.sh/vfile@6.0.3";
+import { ImageResourceInfo } from "./getImageInfoFromMarkdown.ts";
 
 /**
  * Verifies a node is a an html Element
@@ -163,22 +167,92 @@ function remarkCustomComponentExtractor(
   return plugin;
 }
 
+interface RemarkExternalResourcesCollectorOptions {
+  /** A function to call for each embedded resource
+   * @param filePath the path to the file that contains the resource
+   * @param src the src of the resource
+   */
+  addExternalResource: (
+    file: string,
+    src: string
+  ) => Promise<ImageResourceInfo>;
+}
+
+function remarkExternalResourcesCollector({
+  addExternalResource,
+}: RemarkExternalResourcesCollectorOptions) {
+  const plugin: Plugin<[], Root> = () => {
+    const handlers: Record<
+      RootContent["type"][number],
+      (node: any, file: VFile) => Promise<void> | void
+    > = {
+      image: async (node: Image, file) => {
+        if (node.url == null) {
+          return;
+        }
+        const result = await addExternalResource(file.path, node.url);
+        if (result != null) {
+          node.url = result.newSrc;
+        }
+      },
+    };
+
+    const mapToHandlers = async (node: Node, file: VFile) => {
+      if (
+        "children" in node &&
+        Array.isArray(node.children) &&
+        node.children.length > 0
+      ) {
+        for (const n of node.children) {
+          await mapToHandlers(n, file);
+        }
+      }
+      if (
+        "type" in node &&
+        typeof node.type === "string" &&
+        node.type in handlers
+      ) {
+        return await handlers[node.type](node, file);
+      }
+      return;
+    };
+
+    const processor = async (tree: Root, file: VFile) => {
+      await mapToHandlers(tree, file);
+      return tree;
+    };
+    return processor;
+  };
+
+  return plugin;
+}
+
 /**
  * Uses unified to process markdown string. Does not handle frontmatter; split it out before calling this function.
  * @param markdownString
  * @returns
  */
-export async function renderMarkdown(markdownString: string) {
-  // Process the markdown
+export async function renderMarkdown(
+  path: string,
+  markdownString: string,
+  addExternalResource: (
+    filePath: string,
+    src: string
+  ) => Promise<ImageResourceInfo>
+) {
+  const vfile = new VFile({ path, value: markdownString });
+
   const file = await unified()
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkMdx)
+    .use(remarkExternalResourcesCollector({ addExternalResource }))
     // deno-lint-ignore no-explicit-any
     .use(remarkCustomComponentExtractor(componentsMap as any))
     .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypeUnwrapImages)
     .use(rehypeStringify, { allowDangerousHtml: true })
-    .process(markdownString);
+    .process(vfile);
 
   return file.toString() as string;
 }

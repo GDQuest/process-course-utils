@@ -1,5 +1,6 @@
 import { transformCustomHTMLTags } from "./transformCustomHTMLTags/transformCustomHTMLTags.ts";
 import { parseMarkdownFile } from "./parseMarkdownFile.ts";
+import { ImageResourceInfo } from "./getImageInfoFromMarkdown.ts";
 
 /**
  * Processes the markdown. If correctMarkdownInPlace is true, it will overwrite the current markdown file with html elements being replaced with custom components.
@@ -10,10 +11,13 @@ import { parseMarkdownFile } from "./parseMarkdownFile.ts";
  * @param collectTags a set to collect all custom JSX-HTML tags found in the markdown. Used for logging purposes
  * @param correctMarkdownInPlace if true, will use the regex replace
  */
-export async function processMarkdownFile<T>(
+export async function processMarkdownFile(
   fullPath: string,
-  relativePath: string,
   collectTags: Set<string>,
+  addExternalResource: (
+    filePath: string,
+    src: string
+  ) => Promise<ImageResourceInfo>,
   correctMarkdownInPlace: boolean
 ) {
   const content = await Deno.readTextFile(fullPath);
@@ -23,8 +27,9 @@ export async function processMarkdownFile<T>(
   }
   const { frontmatter, body } = await parseMarkdownFile(
     content,
-    relativePath,
-    collectTags
+    fullPath,
+    collectTags,
+    addExternalResource
   );
 
   return { frontmatter, body };

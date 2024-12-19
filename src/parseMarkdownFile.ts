@@ -1,3 +1,4 @@
+import { ImageResourceInfo } from "./getImageInfoFromMarkdown.ts";
 import { parse as parseYaml } from "jsr:@std/yaml";
 import { isPlainObject } from "./isPlainObject.ts";
 import { renderMarkdown } from "./renderMarkdown.ts";
@@ -13,13 +14,17 @@ export interface ProcessFrontMatter<T> {
 /**
  * Parses the frontmatter and markdown from an MD/MDX file.
  * @param content the full file contents as a string
- * @param filePath the path to the file, used for debugging only.
+ * @param fullPath the path to the file, used for debugging only.
  * @param collectTags a set to collect all custom JSX-HTML tags found in the markdown. Used for logging purposes
  */
-export async function parseMarkdownFile<T>(
+export async function parseMarkdownFile(
   content: string,
-  filePath: string,
-  collectTags: Set<string>
+  fullPath: string,
+  collectTags: Set<string>,
+  addExternalResource: (
+    filePath: string,
+    src: string
+  ) => Promise<ImageResourceInfo>
 ) {
   const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/;
   const match = content.match(frontmatterRegex) || [];
@@ -38,9 +43,9 @@ export async function parseMarkdownFile<T>(
 
   const body = await (async () => {
     try {
-      return await renderMarkdown(rawBody);
+      return await renderMarkdown(fullPath, rawBody, addExternalResource);
     } catch (error) {
-      throw new Error(`Error rendering markdown for ${filePath}: ${error}`);
+      throw new Error(`Error rendering markdown for ${fullPath}: ${error}`);
     }
   })();
 
