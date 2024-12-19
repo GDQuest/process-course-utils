@@ -41,6 +41,9 @@ const makeWebSocketUpgrader = (printFn: (msg: string) => void) => {
   };
 
   addEventListener("hmr", onHmr);
+  globalThis.addEventListener("unload", () => {
+    refresh("__all");
+  });
 
   const destroy = () => removeEventListener("hmr", onHmr);
 
