@@ -81,6 +81,25 @@ export const componentsMap = {
       `</span></span>`
     );
   },
+  GodotEmbed: ({
+    src,
+    title = "Godot Game",
+  }: {
+    src: string;
+    title?: string;
+  }) => {
+    if (!src) {
+      throw new Error("No `src` property provided for GodotEmbed");
+    }
+    return [
+      `<iframe className="gdquest-godot-embed"`,
+      `src="${src}"`,
+      `title="${title}"`,
+      `allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"`,
+      `allowFullScreen`,
+      `/>`,
+    ].join(" ");
+  },
   VideoEmbed: ({
     url,
     title = "youtube video player",
