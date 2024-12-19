@@ -101,6 +101,8 @@ interface ParseFlagsOptions<
   spec: FlagsSpecificationList;
   /** The default options for the CLI, if none are passed. This is passed as-is to Deno's `cli.parseArgs` */
   default: TDefault;
+  /** The arguments string to parse (e.g, `Deno.args`) */
+  args: string[];
 }
 
 /**
@@ -117,12 +119,13 @@ export function parseFlags<
   description,
   spec: specRaw,
   default: defaultOptions,
+  args,
 }: ParseFlagsOptions) {
   const spec = [...alwaysPresentFlags, ...specRaw];
 
   const parseOptions = buildParseOptions(spec, defaultOptions);
   /** the parsed final flags */
-  const flags = cli.parseArgs(Deno.args, parseOptions) as T;
+  const flags = cli.parseArgs(args, parseOptions) as T;
 
   const cwd = Deno.cwd();
 
