@@ -1,4 +1,4 @@
-import { type ZodError } from "https://deno.land/x/zod@v3.23.8/mod.ts";
+import z, { type ZodError } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 
 export * from "https://deno.land/x/zod@v3.23.8/mod.ts";
 
@@ -20,3 +20,5 @@ export function printZodError<K, T extends ZodError<K>>(
       _errors.length > 0 && printError(`${key}: ${_errors.join(", ")}`)
   );
 }
+
+export const dateSchema = z.string().or(z.date()).transform( arg => new Date( arg ) )

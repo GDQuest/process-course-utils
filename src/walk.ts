@@ -39,6 +39,9 @@ export async function getFileInfo(
     isDirectory: stat.isDirectory,
     isSymlink: stat.isSymlink,
     realPath: await Deno.realPath(path),
+    birthtime: stat.birthtime,
+    ctime: stat.ctime,
+    mtime: stat.mtime
   };
 
   if (stat.isDirectory) {
@@ -75,6 +78,9 @@ type WalkEntryBase = Deno.DirEntry & {
   realPath: string;
   relativePath: string;
   pathParts: string[];
+  ctime: Date | null;
+  mtime: Date | null;
+  birthtime: Date | null;
 };
 
 /** A file walk entry. */
