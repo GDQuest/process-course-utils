@@ -168,8 +168,8 @@ const MAP = {
     save: { default: "ctrl+alt+s", mac: "opt+cmd+s" },
     "save all": { default: "ctrl+shift+alt+s", mac: "cmd+shift+opt+s" },
     "soft reload script": { default: "ctrl+shift+r", mac: "cmd+shift+r" },
-    "history previous": { default: "alt+left", mac: "opt+left" },
-    "history next": { default: "alt+right", mac: "opt+right" },
+    "history previous": { default: "alt+left", mac: "cmd+opt+left" },
+    "history next": { default: "alt+right", mac: "cmd+opt+right" },
     close: { default: "ctrl+w", mac: "cmd+w" },
     run: { default: "ctrl+shift+x", mac: "cmd+shift+x" },
     "toggle scripts panel": { default: "ctrl+\\", mac: "cmd+\\" },
@@ -271,15 +271,14 @@ type ShortcutMap = typeof MAP;
 
 export function GodotShortcut<
   K extends keyof ShortcutMap,
-  T extends keyof ShortcutMap[K]
+  T extends keyof ShortcutMap[K],
 >(scope: string | K, type: string | T) {
   const shortcut = MAP[scope as K][type as T] as Shortcut | undefined;
   if (shortcut == null) {
     return "";
   }
   const hasMac = "mac" in shortcut;
-  const className =
-    `gdquest-godot-shortcut shortcut-windows shortcut-linux` +
+  const className = `gdquest-godot-shortcut shortcut-windows shortcut-linux` +
     (hasMac ? "" : " shortcut-mac");
 
   return (
