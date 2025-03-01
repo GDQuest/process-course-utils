@@ -1,5 +1,12 @@
 import { type Plugin, unified } from "https://esm.sh/unified@11.0.4";
-import type { Html, Node, Root, RootContent } from "npm:@types/mdast";
+import type {
+  Html,
+  Node,
+  Root,
+  RootContent,
+  Parent,
+  Image,
+} from "npm:@types/mdast";
 import {
   type MdxJsxAttribute,
   type MdxJsxExpressionAttribute,
@@ -13,7 +20,6 @@ import rehypeStringify from "https://esm.sh/rehype-stringify@10.0.0";
 import remarkGfm from "https://esm.sh/remark-gfm@4.0.0";
 import remarkMdx from "https://esm.sh/remark-mdx@3.0.0";
 import { componentsMap as defaultComponentMap } from "./transformCustomHTMLTags/transformCustomHTMLTags.ts";
-import { type Image } from "npm:@types/mdast";
 import { VFile } from "https://esm.sh/vfile@6.0.3";
 import { ImageResourceInfo } from "./getImageInfoFromMarkdown.ts";
 
@@ -46,121 +52,131 @@ interface ProcessedJSXNode extends Node {
   children: Node[];
 }
 
+declare module "npm:@types/mdast" {
+  interface RootContentMap {
+    processedNode: ProcessedJSXNode;
+  }
+}
 export type ComponentMap = Record<
-string,
-<T extends Record<string, unknown>>(
-  properties: T,
-  node: ProcessedJSXNode
-) => Promise<Node | string> | Node | string
->
+  string,
+  <T extends Record<string, unknown>>(
+    properties: T,
+    node: ProcessedJSXNode
+  ) => Promise<Node | string> | Node | string
+>;
 
-function remarkCustomComponentExtractor(
-  componentsMap?: ComponentMap
-) {
-  const extractComponents = async <T extends Node>(node: T): Promise<Node> => {
-    if (isMdxJsxFlowElement(node) || isMdxJsxTextElement(node)) {
-      if (node.name == null) {
-        // fragment
-        node.children = await Promise.all(node.children.map(extractComponents));
-        return node;
+function remarkCustomComponentExtractor(componentsMap?: ComponentMap) {
+  const extractComponents = async <T extends Node>(
+    node: T,
+    index?: number,
+    parent?: Parent
+  ): Promise<Node | Node[]> => {
+    const _children = "children" in node && Array.isArray(node.children) && node.children.length > 0 ? node.children : [];
+    const children = ((
+      node &&
+      _children.length > 0
+    ) ? await Promise.all(
+      _children.map((child, index) =>
+          extractComponents(child, index, node as unknown as Parent)
+        )
+      ) : []).flat(1)
+    
+    if (
+      !(isMdxJsxFlowElement(node) || isMdxJsxTextElement(node)) ||
+      typeof index === "undefined" ||
+      typeof parent === "undefined" ||
+      node.name == null ||
+      node.name === ""
+    ) {
+      if(_children.length > 0){
+        (node as unknown as Parent).children = children as RootContent[];
       }
+      return node;
+    }
 
-      const props = Object.fromEntries(
-        node.attributes.map((data): [string, string | true | number] => {
-          if (isMdxJsxExpressionAttribute(data)) {
-            throw new Error(
-              `Dynamic attributes are not supported (${data.value})`
-            );
-          }
-          const { name, value } = data;
-          if (typeof value === "string" || typeof value === "number") {
-            return [name, value] as const;
-          }
-          if (value == null) {
-            return [name, true] as const;
-          }
-          if (
-            typeof value === "object" &&
-            `type` in value &&
-            value.type === "mdxJsxAttributeValueExpression" &&
-            `value` in value
-          ) {
-            return [name, value.value] as const;
-          }
-          return [name, JSON.stringify(value)] as const;
-        })
-      );
-
-      const isCustomComponent = /[A-Z]/.test(node.name[0]);
-      const hName = isCustomComponent
-        ? "section"
-        : node.name.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
-
-      const hProperties = isCustomComponent
-        ? { className: `custom-component ${node.name}`, ...props }
-        : props;
-
-      const children = await Promise.all(node.children?.map(extractComponents) ?? []);
-
-      const newNode: ProcessedJSXNode = {
-        type: node.name,
-        isCustomComponent,
-        data: {
-          hName,
-          hProperties,
-        },
-        children,
-      };
-
-      if (componentsMap && node.name in componentsMap) {
-        const result = await componentsMap[node.name](
-          {
-            children: "%children%",
-            ...hProperties,
-          },
-          newNode
-        );
-        if (typeof result === "string") {
-          // poor man's children replacement
-          const parts = result.split("%children%");
-          if (parts.length === 2) {
-            return {
-              type: "mdxJsxFlowElement",
-              name: null,
-              children: [
-                {
-                  type: "html",
-                  value: parts[0],
-                },
-                ...newNode.children,
-                {
-                  type: "html",
-                  value: parts[1],
-                },
-              ],
-            } as MdxJsxFlowElement;
-          }
-          return {
-            type: "html",
-            value: result,
-          } as Html;
+    const props = Object.fromEntries(
+      node.attributes.map((data): [string, string | true | number] => {
+        if (isMdxJsxExpressionAttribute(data)) {
+          throw new Error(
+            `Dynamic attributes are not supported (${data.value})`
+          );
         }
-        return result;
-      }
+        const { name, value } = data;
+        if (typeof value === "string" || typeof value === "number") {
+          return [name, value] as const;
+        }
+        if (value == null) {
+          return [name, true] as const;
+        }
+        if (
+          typeof value === "object" &&
+          `type` in value &&
+          value.type === "mdxJsxAttributeValueExpression" &&
+          `value` in value
+        ) {
+          return [name, value.value] as const;
+        }
+        return [name, JSON.stringify(value)] as const;
+      })
+    );
 
+    const isCustomComponent = /[A-Z]/.test(node.name[0]);
+    const hName = isCustomComponent
+      ? "section"
+      : node.name.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+
+    const hProperties = isCustomComponent
+      ? { className: `custom-component ${node.name}`, ...props }
+      : props;
+
+    const newNode: ProcessedJSXNode = {
+      type: node.name,
+      isCustomComponent,
+      data: {
+        hName,
+        hProperties,
+      },
+      children: node.children,
+    };
+
+    if (!componentsMap || !(node.name in componentsMap)) {
       return newNode;
     }
-
-    if ("children" in node && node.children && Array.isArray(node.children)) {
-      node.children = await Promise.all(node.children.map(extractComponents));
+    const result = await componentsMap[node.name](
+      {
+        content: "%children%",
+        ...hProperties,
+      },
+      newNode
+    );
+    if (typeof result !== "string") {
+      return result;
     }
-    return node;
+    // poor man's children replacement
+    const parts = result.split("%children%");
+    if (parts.length < 2) {
+      return {
+        type: "html",
+        value: result,
+      } as Html;
+    }
+    const newNodes = [
+      {
+        type: "html",
+        value: parts[0],
+      } as Html,
+      ...newNode.children,
+      {
+        type: "html",
+        value: parts[1],
+      } as Html,
+    ]
+    return newNodes;
   };
 
   const plugin: Plugin<[], Root> = () => {
     const processor = async (tree: Root) => {
-      const processedTree = (await extractComponents(tree)) as Root;
-      return processedTree;
+      await extractComponents(tree)
     };
     return processor;
   };
@@ -240,7 +256,7 @@ export async function renderMarkdown(
     filePath: string,
     src: string
   ) => Promise<ImageResourceInfo>,
-  componentsMap: ComponentMap = defaultComponentMap as any,
+  componentsMap: ComponentMap = defaultComponentMap as any
 ) {
   const vfile = new VFile({ path, value: markdownString });
 
