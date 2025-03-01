@@ -1,6 +1,7 @@
 {
   "version": "4",
   "specifiers": {
+    "jsr:@davidbonnet/astring@1.8.6": "1.8.6",
     "jsr:@deno/cache-dir@0.13.2": "0.13.2",
     "jsr:@deno/emit@*": "0.46.0",
     "jsr:@deno/graph@~0.73.1": "0.73.1",
@@ -13,6 +14,7 @@
     "jsr:@std/fmt@0.223": "0.223.0",
     "jsr:@std/fmt@^1.0.3": "1.0.3",
     "jsr:@std/fs@0.223": "0.223.0",
+    "jsr:@std/html@1.0.3": "1.0.3",
     "jsr:@std/html@^1.0.3": "1.0.3",
     "jsr:@std/http@*": "1.0.12",
     "jsr:@std/io@0.223": "0.223.0",
@@ -20,14 +22,22 @@
     "jsr:@std/net@^1.0.4": "1.0.4",
     "jsr:@std/path@*": "1.0.8",
     "jsr:@std/path@0.223": "0.223.0",
+    "jsr:@std/path@1.0.8": "1.0.8",
     "jsr:@std/path@^1.0.8": "1.0.8",
     "jsr:@std/streams@^1.0.8": "1.0.8",
+    "jsr:@vento/vento@*": "1.12.15",
+    "npm:@types/estree@1.0.6": "1.0.6",
     "npm:@types/mdast@*": "4.0.4",
     "npm:@types/node@*": "22.5.4",
+    "npm:estree-walker@3.0.3": "3.0.3",
     "npm:image-dimensions@*": "2.3.0",
+    "npm:meriyah@6.0.5": "6.0.5",
     "npm:sass@^1.80.6": "1.83.0"
   },
   "jsr": {
+    "@davidbonnet/astring@1.8.6": {
+      "integrity": "98b4914c8863cdf8c0ff83bb5c528caa67a8dca6020ad6234113499f00583e3a"
+    },
     "@deno/cache-dir@0.13.2": {
       "integrity": "c22419dfe27ab85f345bee487aaaadba498b005cce3644e9d2528db035c5454d",
       "dependencies": [
@@ -84,7 +94,7 @@
         "jsr:@std/cli",
         "jsr:@std/encoding",
         "jsr:@std/fmt@^1.0.3",
-        "jsr:@std/html",
+        "jsr:@std/html@^1.0.3",
         "jsr:@std/media-types",
         "jsr:@std/net",
         "jsr:@std/path@^1.0.8",
@@ -115,6 +125,17 @@
     },
     "@std/streams@1.0.8": {
       "integrity": "b41332d93d2cf6a82fe4ac2153b930adf1a859392931e2a19d9fabfb6f154fb3"
+    },
+    "@vento/vento@1.12.15": {
+      "integrity": "34174a57475a28c1d9a62359edeb5b3d1205c331fe22f76cc6d064d6cb1666d6",
+      "dependencies": [
+        "jsr:@davidbonnet/astring",
+        "jsr:@std/html@1.0.3",
+        "jsr:@std/path@1.0.8",
+        "npm:@types/estree",
+        "npm:estree-walker",
+        "npm:meriyah"
+      ]
     }
   },
   "npm": {
@@ -179,6 +200,9 @@
         "node-addon-api"
       ]
     },
+    "@types/estree@1.0.6": {
+      "integrity": "sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw=="
+    },
     "@types/mdast@4.0.4": {
       "integrity": "sha512-kGaNbPh1k7AFzgpud/gMdvIm5xuECykRR+JnWKQno9TAXVa6WIVCGTPvYGekIDL4uwCZQSYbUxNBSb1aUo79oA==",
       "dependencies": [
@@ -209,6 +233,12 @@
     "detect-libc@1.0.3": {
       "integrity": "sha512-pGjwhsmsp4kL2RTz08wcOlGN83otlqHeD/Z5T8GXZB+/YcpQ/dgo+lbU8ZsGxV0HIvqqxo9l7mqYwyYMD9bKDg=="
     },
+    "estree-walker@3.0.3": {
+      "integrity": "sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g==",
+      "dependencies": [
+        "@types/estree"
+      ]
+    },
     "fill-range@7.1.1": {
       "integrity": "sha512-YsGpe3WHLK8ZYi4tWDg2Jy3ebRz2rXowDxnld4bkQB00cc/1Zw9AWnC0i9ztDJitivtQvaI9KaLyKrc+hBW0yg==",
       "dependencies": [
@@ -232,6 +262,9 @@
     },
     "is-number@7.0.0": {
       "integrity": "sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng=="
+    },
+    "meriyah@6.0.5": {
+      "integrity": "sha512-SrMqQCox7TTwtftWKHy/ZaVe+ZRpRl20pAgDo+PS9hzcAJrMjYsBJQPPiLXTnjztrqdfGS+Zz99r6Bwvydta1w=="
     },
     "micromatch@4.0.8": {
       "integrity": "sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==",
