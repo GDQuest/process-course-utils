@@ -1,7 +1,7 @@
 import { ImageResourceInfo } from "./getImageInfoFromMarkdown.ts";
 import { parse as parseYaml } from "jsr:@std/yaml";
 import { isPlainObject } from "./isPlainObject.ts";
-import { renderMarkdown } from "./renderMarkdown.ts";
+import { renderMarkdown, type ComponentMap } from "./renderMarkdown.ts";
 
 export interface ProcessFrontMatter<T> {
   (
@@ -24,7 +24,8 @@ export async function parseMarkdownFile(
   addExternalResource: (
     filePath: string,
     src: string
-  ) => Promise<ImageResourceInfo>
+  ) => Promise<ImageResourceInfo>,
+  componentsMap?: ComponentMap
 ) {
   const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/;
   const match = content.match(frontmatterRegex) || [];
@@ -43,7 +44,7 @@ export async function parseMarkdownFile(
 
   const body = await (async () => {
     try {
-      return await renderMarkdown(fullPath, rawBody, addExternalResource);
+      return await renderMarkdown(fullPath, rawBody, addExternalResource, componentsMap);
     } catch (error) {
       throw new Error(`Error rendering markdown for ${fullPath}: ${error}`);
     }

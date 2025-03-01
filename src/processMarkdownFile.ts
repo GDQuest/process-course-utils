@@ -1,6 +1,7 @@
 import { transformCustomHTMLTags } from "./transformCustomHTMLTags/transformCustomHTMLTags.ts";
 import { parseMarkdownFile } from "./parseMarkdownFile.ts";
 import { ImageResourceInfo } from "./getImageInfoFromMarkdown.ts";
+import type { ComponentMap } from "./renderMarkdown.ts";
 
 /**
  * Processes the markdown. If correctMarkdownInPlace is true, it will overwrite the current markdown file with html elements being replaced with custom components.
@@ -18,7 +19,8 @@ export async function processMarkdownFile(
     filePath: string,
     src: string
   ) => Promise<ImageResourceInfo>,
-  correctMarkdownInPlace: boolean
+  correctMarkdownInPlace: boolean,
+  componentsMap?: ComponentMap,
 ) {
   const content = await Deno.readTextFile(fullPath);
   if (correctMarkdownInPlace) {
@@ -29,7 +31,8 @@ export async function processMarkdownFile(
     content,
     fullPath,
     collectTags,
-    addExternalResource
+    addExternalResource,
+    componentsMap
   );
 
   return { frontmatter, body };

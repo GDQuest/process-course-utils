@@ -12,7 +12,7 @@ import rehypeUnwrapImages from "https://esm.sh/rehype-unwrap-images@1.0.0";
 import rehypeStringify from "https://esm.sh/rehype-stringify@10.0.0";
 import remarkGfm from "https://esm.sh/remark-gfm@4.0.0";
 import remarkMdx from "https://esm.sh/remark-mdx@3.0.0";
-import { componentsMap } from "./transformCustomHTMLTags/transformCustomHTMLTags.ts";
+import { componentsMap as defaultComponentMap } from "./transformCustomHTMLTags/transformCustomHTMLTags.ts";
 import { type Image } from "npm:@types/mdast";
 import { VFile } from "https://esm.sh/vfile@6.0.3";
 import { ImageResourceInfo } from "./getImageInfoFromMarkdown.ts";
@@ -46,20 +46,22 @@ interface ProcessedJSXNode extends Node {
   children: Node[];
 }
 
+export type ComponentMap = Record<
+string,
+<T extends Record<string, unknown>>(
+  properties: T,
+  node: ProcessedJSXNode
+) => Promise<Node | string> | Node | string
+>
+
 function remarkCustomComponentExtractor(
-  componentsMap: Record<
-    string,
-    (
-      properties: Record<string, string | true | number>,
-      node: ProcessedJSXNode
-    ) => Node | string
-  >
+  componentsMap?: ComponentMap
 ) {
-  const extractComponents = <T extends Node>(node: T): Node => {
+  const extractComponents = async <T extends Node>(node: T): Promise<Node> => {
     if (isMdxJsxFlowElement(node) || isMdxJsxTextElement(node)) {
       if (node.name == null) {
         // fragment
-        node.children = node.children.map(extractComponents);
+        node.children = await Promise.all(node.children.map(extractComponents));
         return node;
       }
 
@@ -98,7 +100,7 @@ function remarkCustomComponentExtractor(
         ? { className: `custom-component ${node.name}`, ...props }
         : props;
 
-      const children = node.children?.map(extractComponents) ?? [];
+      const children = await Promise.all(node.children?.map(extractComponents) ?? []);
 
       const newNode: ProcessedJSXNode = {
         type: node.name,
@@ -110,8 +112,8 @@ function remarkCustomComponentExtractor(
         children,
       };
 
-      if (node.name in componentsMap) {
-        const result = componentsMap[node.name](
+      if (componentsMap && node.name in componentsMap) {
+        const result = await componentsMap[node.name](
           {
             children: "%children%",
             ...hProperties,
@@ -150,15 +152,14 @@ function remarkCustomComponentExtractor(
     }
 
     if ("children" in node && node.children && Array.isArray(node.children)) {
-      node.children = node.children.map(extractComponents);
+      node.children = await Promise.all(node.children.map(extractComponents));
     }
-
     return node;
   };
 
   const plugin: Plugin<[], Root> = () => {
-    const processor = (tree: Root) => {
-      const processedTree = extractComponents(tree) as Root;
+    const processor = async (tree: Root) => {
+      const processedTree = (await extractComponents(tree)) as Root;
       return processedTree;
     };
     return processor;
@@ -238,7 +239,8 @@ export async function renderMarkdown(
   addExternalResource: (
     filePath: string,
     src: string
-  ) => Promise<ImageResourceInfo>
+  ) => Promise<ImageResourceInfo>,
+  componentsMap: ComponentMap = defaultComponentMap as any,
 ) {
   const vfile = new VFile({ path, value: markdownString });
 
@@ -247,8 +249,7 @@ export async function renderMarkdown(
     .use(remarkGfm)
     .use(remarkMdx)
     .use(remarkExternalResourcesCollector({ addExternalResource }))
-    // deno-lint-ignore no-explicit-any
-    .use(remarkCustomComponentExtractor(componentsMap as any))
+    .use(remarkCustomComponentExtractor(componentsMap))
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeUnwrapImages)
     .use(rehypeStringify, { allowDangerousHtml: true })
