@@ -112,22 +112,25 @@ export const componentsMap = {
     }
     const youtubeUrlRegex =
       /(?:youtube\.com(?:\/watch\?.*v=|\/embed\/)|youtu\.be\/)(?<videoId>[a-zA-Z_\d-]+)\??/;
-    //const vimeoUrlRegex =
-    //  /vimeo\.com\/(video\/)?(?<videoId>\d+)(?:(\?h=|\/)(?<unlistedHash>[0-9a-z]+))?/;
+    const vimeoUrlRegex =
+      /vimeo\.com\/(video\/)?(?<videoId>\d+)(?:(\?h=|\/)(?<unlistedHash>[0-9a-z]+))?/;
 
-    const { videoId: YoutubeVideoId } = url.match(youtubeUrlRegex)?.groups ?? {
-      videoId: "",
-    };
-
-    if (YoutubeVideoId == null || YoutubeVideoId === "") {
-      // NOTE: there are no Vimeo embeds in the current content, so this is not implemented
-      return "";
+    let provider = "youtube";
+    let videoId = url.match(youtubeUrlRegex)?.groups?.videoId ?? ""
+    let src = `https://www.youtube-nocookie.com/embed/${videoId}`
+    if (videoId == null || videoId === "") {
+      provider = "vimeo";
+      videoId = url.match(vimeoUrlRegex)?.groups?.videoId ?? "";
+      if (videoId == null || videoId === "") {
+        return "";
+      }
+      src = `https://player.vimeo.com/video/${videoId}`;
     }
 
     return [
-      `<iframe className="gdquest-video-embed"`,
-      `src="https://www.youtube.com/embed/${YoutubeVideoId}"`,
-      `title="${title}"`,
+      `<iframe className="video-${provider}"` ,
+      `src="${src}"`,
+      `title="${title || "video"}"`,
       `allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"`,
       `allowFullScreen`,
       `/>`,
@@ -181,7 +184,7 @@ export const componentsMap = {
     `<h5 className="gdquest-quote-bubble-author-title">Founder and teacher at GDQuest</h5>` +
     `\n</figcaption>` +
     `</figure>`,
-};
+} as const;
 
 /**
  * Test to attempt to skip React custom elements and simply use valid HTML markup with CSS instead
