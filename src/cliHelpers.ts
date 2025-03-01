@@ -216,7 +216,7 @@ const levelIcons: Record<LogRecord["levelName"], string> = {
   CRITICAL: "🆘",
 } as const;
 
-export function enableConsoleLogging(name: string) {
+export function enableConsoleLogging(...names: string[]) {
   setupLogger({
     handlers: {
       console: new ConsoleHandler("DEBUG", {
@@ -229,15 +229,8 @@ export function enableConsoleLogging(name: string) {
         },
       }),
     },
-    loggers: {
-      [name]: {
-        level: "DEBUG",
-        handlers: ["console"],
-      },
-      [`${name}:Server`]: {
-        level: "DEBUG",
-        handlers: ["console"],
-      },
-    },
+    loggers: Object.fromEntries(
+      names.map((name) => [name, { level: "DEBUG", handlers: ["console"] }])
+    ),
   });
 }
