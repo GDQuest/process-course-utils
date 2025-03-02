@@ -15,6 +15,7 @@ export * from "./hash.ts";
 export * from "./isPlainObject.ts";
 export * from "./logMissingReferencesToConsole.ts";
 export * from "./maybeStringArraySchema.ts";
+export * from "./measureTime.ts";
 export * from "./NominalType.ts";
 export * from "./parseHTMLAttributes.ts";
 export * from "./parseMarkdownFile.ts";

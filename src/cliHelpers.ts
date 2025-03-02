@@ -214,6 +214,7 @@ const levelIcons: Record<LogRecord["levelName"], string> = {
   WARN: "⚠️",
   ERROR: "❌",
   CRITICAL: "🆘",
+  TIME: "⏱️",
 } as const;
 
 export function enableConsoleLogging(...names: string[]) {
@@ -222,6 +223,11 @@ export function enableConsoleLogging(...names: string[]) {
       console: new ConsoleHandler("DEBUG", {
         formatter(logRecord) {
           const { levelName, loggerName, args, msg } = logRecord;
+          if(msg === "timeLog" && args && args.length && args[0] != null && typeof args[0] === "object" && 'duration' in args[0] && typeof args[0].duration === "number" && 'name' in args[0] && typeof args[0].name === "string") {
+            const name = args[0].name;
+            const duration = (args[0].duration / 1000).toFixed(3);
+            return `${levelIcons.TIME} [${loggerName}][${name}] took ${duration}s`;
+          }
           return (
             `${levelIcons[levelName]} [${loggerName}] ${msg}` +
             (args && args.length ? `${JSON.stringify(args, null, 2)}` : "")

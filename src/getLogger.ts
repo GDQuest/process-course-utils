@@ -1,6 +1,25 @@
-import { getLogger as _getLogger, type Logger as _Logger } from "jsr:@std/log";
+import { getLogger as _getLogger, Logger, LogLevels } from "jsr:@std/log";
+import { startMeasuringTime } from "./measureTime.ts";
 
-export type Logger = _Logger & { getLogger: (name: string) => Logger };
+declare module "jsr:@std/log" {
+  interface Logger{
+    measureTime: (name: string) => () => void;
+    getLogger: (name: string) => Logger;
+  }
+}
+
+Logger.prototype.measureTime = function loggerTime(this: Logger, name: string) {
+  if (this.level > LogLevels.INFO) {
+    return () => {}
+  }
+  const end = startMeasuringTime(name);
+  return () => {
+    
+    const duration = end();
+
+    this.info("timeLog", { name, duration })
+  }
+}
 
 /**
  * A small wrapper around the std/log module that adds a getLogger method to the logger object.
@@ -8,11 +27,15 @@ export type Logger = _Logger & { getLogger: (name: string) => Logger };
  * "nested loggers" that can be used to distinguish between different parts of the codebase.
  * @param name the name of the logger
  */
-export function getLogger(name: string): Logger {
+export const getLogger = (name: string) => {
   const logger = _getLogger(name);
-  (["info", "warn", "error", "debug"] as const).forEach((level) => {
-    logger[level] = logger[level].bind(logger);
-  });
-  const getSublogger = (subName: string) => getLogger(`${name}:${subName}`);
-  return Object.assign(logger, { getLogger: getSublogger });
+  logger.info = logger.info.bind(logger);
+  logger.error = logger.error.bind(logger);
+  logger.warn = logger.warn.bind(logger);
+  logger.debug = logger.debug.bind(logger);
+  logger.measureTime = logger.measureTime.bind(logger);
+  logger.getLogger = (subName: string) => getLogger(`${name}:${subName}`)
+  return logger
 }
+
+export { Logger, LogLevels}
