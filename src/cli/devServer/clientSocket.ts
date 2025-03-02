@@ -1,4 +1,3 @@
-import { WalkEntry } from "jsr:@std/fs@^1.0.5/walk";
 import { SocketMessage } from "./SocketMessageTypes.ts";
 
 export function clientSideSocketHandler() {

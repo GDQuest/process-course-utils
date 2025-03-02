@@ -1,4 +1,4 @@
-import { transformCustomHTMLTags } from "./transformCustomHTMLTags/transformCustomHTMLTags.ts";
+import { transformCustomHTMLTags } from "../any/transformCustomHTMLTags/mod.ts";
 import { parseMarkdownFile } from "./parseMarkdownFile.ts";
 import { ImageResourceInfo } from "./getImageInfoFromMarkdown.ts";
 import type { ComponentMap } from "./renderMarkdown.ts";

@@ -1,6 +1,5 @@
 import { join } from "jsr:@std/path";
 import { ensureDir } from "jsr:@std/fs";
-import { type Logger } from "jsr:@std/log";
 
 const writeOutputFileOptions = {
   log: null as ((message: string) => void) | null,

@@ -19,7 +19,7 @@ import rehypeUnwrapImages from "https://esm.sh/rehype-unwrap-images@1.0.0";
 import rehypeStringify from "https://esm.sh/rehype-stringify@10.0.0";
 import remarkGfm from "https://esm.sh/remark-gfm@4.0.0";
 import remarkMdx from "https://esm.sh/remark-mdx@3.0.0";
-import { componentsMap as defaultComponentMap } from "./transformCustomHTMLTags/transformCustomHTMLTags.ts";
+import { componentsMap as defaultComponentMap } from "../any/transformCustomHTMLTags/componentsMap.ts";
 import { VFile } from "https://esm.sh/vfile@6.0.3";
 import { ImageResourceInfo } from "./getImageInfoFromMarkdown.ts";
 

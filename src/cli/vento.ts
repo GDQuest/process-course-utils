@@ -1,5 +1,5 @@
 import vento, { type Options as VentoOptions } from "jsr:@vento/vento";
-import { type Template as VentoTemplate, Environment as VentoEnvironment } from "jsr:@vento/vento/src/environment.ts";
+import { type Template as VentoTemplate } from "jsr:@vento/vento/src/environment.ts";
 import { existsSync } from "jsr:@std/fs@^1.0.5/exists";
 import { writeOutputFile } from "./writeOutputFile.ts";
 
