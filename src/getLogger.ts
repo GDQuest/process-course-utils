@@ -8,16 +8,19 @@ declare module "jsr:@std/log" {
   }
 }
 
-Logger.prototype.measureTime = function loggerTime(this: Logger, name: string) {
+Logger.prototype.measureTime = function loggerTime(this: Logger, name: string, showStart = true) {
   if (this.level > LogLevels.INFO) {
     return () => {}
+  }
+  if(showStart){
+    this.info("timeLog", { name, start: true, duration: 0 })
   }
   const end = startMeasuringTime(name);
   return () => {
     
     const duration = end();
 
-    this.info("timeLog", { name, duration })
+    this.info("timeLog", { end: true, name, duration })
   }
 }
 

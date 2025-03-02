@@ -225,6 +225,9 @@ export function enableConsoleLogging(...names: string[]) {
           const { levelName, loggerName, args, msg } = logRecord;
           if(msg === "timeLog" && args && args.length && args[0] != null && typeof args[0] === "object" && 'duration' in args[0] && typeof args[0].duration === "number" && 'name' in args[0] && typeof args[0].name === "string") {
             const name = args[0].name;
+            if('start' in args[0] && args[0].start === true) {
+              return `${levelIcons.TIME} [${loggerName}][${name}] started`;
+            }
             const duration = (args[0].duration / 1000).toFixed(3);
             return `${levelIcons.TIME} [${loggerName}][${name}] took ${duration}s`;
           }
