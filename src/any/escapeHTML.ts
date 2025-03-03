@@ -3,7 +3,7 @@ const escapeReplacements: { [index: string]: string } = {
   "<": "&lt;",
   ">": "&gt;",
   '"': "&quot;",
-  "'": "&#39;",
+  "'": "&#039;",
 };
 
 const other = {

@@ -1,5 +1,6 @@
-import './browserTypes.d.ts'
-import { createElement as h, elementsFactory } from "./createElement.ts";
+import '../../web/browserTypes'
+import { createElement as h } from "./createElement.ts";
+import { elementsFactory } from "./elementsFactory.ts";
 
 export const { h1, h2, h3, a, div, ul, li, span, button, form, img } =
     elementsFactory(
