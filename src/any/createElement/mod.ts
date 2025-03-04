@@ -1,11 +1,10 @@
-export * from './createElement.ts'
 export * from './createElementDom.web.ts'
 export * from './createElementString.ts'
 export * from './createElementTemplate.ts'
 export * from './elementsFactory.ts'
-export * from './functionRegistery.ts'
-export * from './h.ts'
-export * from './hydrateDOM.ts'
+export * from './h.web.ts'
+export * from './isSelfClosingTag.ts'
+export * from './tmpl.any.ts'
 export * from './types.ts'
 
 

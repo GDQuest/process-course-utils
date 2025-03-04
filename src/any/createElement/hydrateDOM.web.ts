@@ -1,4 +1,10 @@
-import { functionRegistry } from "./functionRegistery";
+/***
+ * UNUSED FILE
+ * 
+ * Maybe some day we will want to serialize functions written server-side and hydrate; but for now,
+ * we don't need this at all.
+ */
+import { functionRegistry } from "./functionRegistery.ts";
 
 // Hydration function to attach event handlers and execute function children
 export function hydrateDOM(rootElement: Element = document.body): void {
