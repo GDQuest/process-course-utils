@@ -76,7 +76,10 @@ export const createElementString: HTMLFactory.CreateElement<"server"> = <
                   `data-prop-${prop}="${escapeHTML(value + "")}"`
               )
               .join(" ");
-          } else {
+          } else if( v === false && (k === "open" || k === 'checked')){
+            return false;
+          }
+          else {
             return `${k}="${escapeHTML(v + "")}"`;
           }
         })

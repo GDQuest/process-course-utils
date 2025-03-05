@@ -7,6 +7,7 @@ import type {
   Parent,
   Image,
   InlineCode,
+  Code
 } from "npm:@types/mdast";
 import {
   type MdxJsxAttribute,
@@ -20,6 +21,7 @@ import rehypeUnwrapImages from "https://esm.sh/rehype-unwrap-images@1.0.0";
 import rehypeStringify from "https://esm.sh/rehype-stringify@10.0.0";
 import remarkGfm from "https://esm.sh/remark-gfm@4.0.0";
 import remarkMdx from "https://esm.sh/remark-mdx@3.0.0";
+import rehypePrism from 'https://esm.sh/rehype-prism-plus@2.0.0'
 import { componentsMap as defaultComponentMap } from "../any/transformCustomHTMLTags/componentsMap.ts";
 import { VFile } from "https://esm.sh/vfile@6.0.3";
 import { ImageResourceInfo } from "./getImageInfoFromMarkdown.ts";
@@ -72,6 +74,9 @@ const isInlinecode = (node: Node): node is InlineCode =>
 const isImageType = (node: Node): node is Image =>
   node && "type" in node && node.type === "image";
 
+const isCodeBlock = (node: Node): node is Code =>
+  node && "type" in node && node.type === "code";
+
 function remarkCustomComponentExtractor(componentsMap?: ComponentMap) {
   const extractComponents = async <T extends Node>(
     node: T,
@@ -118,6 +123,22 @@ function remarkCustomComponentExtractor(componentsMap?: ComponentMap) {
     if(isImageType(node)) {
       node.url = "/" + node.url.replace(/^\/+/, "");
     }
+
+    /* * /
+    if(isCodeBlock(node)) {
+      const content = node.value || "";
+      const hasRenderer = componentsMap && "CodeBlock" in componentsMap;
+      if(content && hasRenderer){
+        const diff = node.lang?.startsWith("diff-") ?? false;
+        const lang = node.lang ? diff ? node.lang.slice(5) : node.lang : "gdscript";
+        const result = await componentsMap["CodeBlock"]({ lang, diff, content}, node as unknown as ProcessedJSXNode);
+        return {
+          type: "html",
+          value: result,
+        } as Html;
+      }
+    }
+    /* */
 
     if (
       !(isMdxJsxFlowElement(node) || isMdxJsxTextElement(node)) ||
@@ -305,6 +326,7 @@ export async function renderMarkdown(
     .use(remarkExternalResourcesCollector({ addExternalResource }))
     .use(remarkCustomComponentExtractor(componentsMap))
     .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypePrism as any)
     .use(rehypeUnwrapImages)
     .use(rehypeStringify, { allowDangerousHtml: true })
     .process(vfile);
