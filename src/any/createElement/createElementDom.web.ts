@@ -1,17 +1,16 @@
 import "../../web/browserTypes.d.ts";
 import { HTMLFactory } from "./types.ts";
-import { Entries } from "../../types/TypeFest.ts";
 
 export const createElementDom: HTMLFactory.CreateElement<"client"> = <
   K extends keyof HTMLElementTagNameMap
 >(
   tagName: K,
-  attributes?: HTMLFactory.Attributes | null,
+  attributes?: HTMLFactory.Attributes<K> | null,
   ...children: HTMLFactory.ValidChild[]
 ) => {
   const element = document.createElement(tagName);
   attributes &&
-    (Object.entries(attributes) as Entries<typeof attributes>).forEach(
+    (Object.entries(attributes)).forEach(
       ([k, v]) => {
         if (typeof v === "function") {
           const fn = v as
@@ -62,13 +61,13 @@ export const createElementDom: HTMLFactory.CreateElement<"client"> = <
       (c) =>
         c != null &&
         c !== false &&
-        element.appendChild(
+        element.append(
           Array.isArray(c)
             ? createElementDom(...c)
             : typeof c === "string" || typeof c === "number"
             ? document.createTextNode(c + "")
             : typeof c === "function"
-            ? c(document.createTextNode(""), "textContent")
+            ? (c(document.createTextNode(""), "textContent") ?? "")
             : c
         )
     );

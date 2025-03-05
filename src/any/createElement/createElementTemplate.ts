@@ -12,10 +12,10 @@ export const createElementTemplate = <
 >(
   createElement: HTMLFactory.CreateElement<Mode>,
   tagName: K,
-  baseAttributes?: HTMLFactory.Attributes | null
+  baseAttributes?: HTMLFactory.Attributes<K> | null
 ) => {
   return (
-    attributes?: HTMLFactory.Attributes | null,
+    attributes?: HTMLFactory.Attributes<K> | null,
     ...children: HTMLFactory.ValidChild[]
   ): Mode extends "client" ? HTMLElementTagNameMap[K] : string => {
     return createElement(

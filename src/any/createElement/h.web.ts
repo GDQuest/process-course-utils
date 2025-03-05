@@ -1,24 +1,8 @@
 import "../../web/browserTypes.d.ts";
-import { createElementDom as h } from "./createElementDom.web.ts";
-import { elementsFactory } from "./elementsFactory.ts";
+import { createElementDom } from "./createElementDom.web.ts";
+import { createElementsProxy } from "./createElementProxy.ts";
 
-export const { h1, h2, h3, a, div, ul, li, span, button, form, img } =
-  elementsFactory(
-    h,
-    "h1",
-    "h2",
-    "h3",
-    "a",
-    "div",
-    "ul",
-    "li",
-    "span",
-    "button",
-    "form",
-    "img"
-  );
-
-export { h };
+export const h = createElementsProxy(createElementDom);
 
 type ChildScalar = Node | string | undefined | null | false;
 type Child = ChildScalar | ChildScalar[] | Child[];

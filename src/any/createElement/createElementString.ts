@@ -2,7 +2,7 @@ import "../../web/browserTypes.d.ts";
 import { HTMLFactory } from "./types.ts";
 import { escapeHTML } from "../escapeHTML.ts";
 import { isSelfClosingTag } from "./isSelfClosingTag.ts";
-import { Entries } from "../../types/TypeFest.ts";
+
 // import { functionRegistry } from "./functionRegistery.ts";
 
 /**
@@ -18,14 +18,14 @@ export const createElementString: HTMLFactory.CreateElement<"server"> = <
   K extends keyof HTMLElementTagNameMap
 >(
   tagName: K,
-  attributes?: HTMLFactory.Attributes | null,
+  attributes?: HTMLFactory.Attributes<K> | null,
   ...children: HTMLFactory.ValidChild[]
 ): string => {
   // const elementId = generateUniqueId('el');
 
   const attributesString = attributes
     ? " " +
-      (Object.entries(attributes) as Entries<typeof attributes>)
+      Object.entries(attributes)
         .map(([k, v]) => {
           if (typeof v === "function") {
             throw new Error(

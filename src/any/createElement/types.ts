@@ -1,4 +1,3 @@
-import type { AttributesKeys } from "../../types/htmlAttributesTypes.ts";
 import type { BindedFunction } from "../../web/makeNodeSignalBinder.ts";
 
 /**
@@ -17,39 +16,38 @@ export declare namespace HTMLFactory {
    */
   export type Props = Record<string, unknown>;
   
-  /**
-   * All possible props key => values correspondances
-   */
-  export type AttributesValues<T> = T extends "class"
-    ? ClassNameValue
-    : T extends "className"
-    ? ClassNameValue
-    : T extends `on${string}`
-    ? EventListenerOrEventListenerObject
-    : T extends "file"
-    ? File
-    : T extends "props"
-    ? Props
-    : T extends string
-    ? string
-    : never;
+
+  type DOMEventHandler<K extends keyof ElementEventMap> = (
+    event: ElementEventMap[K],
+  ) => void;
   
-  export type ComputedAttributesKeys =
-    | AttributesKeys
-    | "className"
-    | `on${string}`
-    | "props"
-    | "exportparts";
-  /**
-   * All possible attributes
-   */
-  export type Attributes = {
-    [K in ComputedAttributesKeys]?: AttributesValues<K> | BindedFunction;
-  };
+
+  export type Attributes<T extends keyof HTMLElementTagNameMap, E extends HTMLElement = HTMLElementTagNameMap[T]> =
+  & Partial<
+    {
+      [K in keyof E]: E[K] | BindedFunction;
+    }
+  >
+  & {
+    [K in `on${Capitalize<keyof ElementEventMap>}`]?: DOMEventHandler<
+      Uncapitalize<K extends `on${infer E}` ? E : never>
+    >;
+  }
+  & {
+    class?: ClassNameValue;
+    className?: ClassNameValue;
+    classList?: ClassNameValue;
+    [key: `data${string}`]: string | number | boolean | null | undefined;
+    [key: `aria${string}`]: string | number | boolean | null | undefined;
+  } & {
+    props?: Props
+  }
+
+
 
   export { BindedFunction }
   export type ValidChild =
-    | SerializedElement<any>
+    | SerializedElement<keyof HTMLElementTagNameMap>
     | HTMLElement
     | Node
     | BindedFunction
@@ -63,7 +61,7 @@ export declare namespace HTMLFactory {
    */
   export type SerializedElement<K extends keyof HTMLElementTagNameMap> = [
     tagName: K,
-    attributes?: Attributes | null,
+    attributes?: Attributes<K> | null,
     ...children: ValidChild[]
   ];
 
@@ -71,7 +69,7 @@ export declare namespace HTMLFactory {
     K extends keyof HTMLElementTagNameMap
   >(
     tagName: K,
-    attributes?: Attributes | null,
+    attributes?: Attributes<K> | null,
     ...children: ValidChild[]
   ) => Mode extends "client" ? HTMLElementTagNameMap[K] : string;
 
