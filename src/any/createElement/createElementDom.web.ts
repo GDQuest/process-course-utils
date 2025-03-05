@@ -1,5 +1,6 @@
 import "../../web/browserTypes.d.ts";
 import { HTMLFactory } from "./types.ts";
+import { kebabize } from "../kebabize.ts";
 
 export const createElementDom: HTMLFactory.CreateElement<"client"> = <
   K extends keyof HTMLElementTagNameMap
@@ -25,14 +26,14 @@ export const createElementDom: HTMLFactory.CreateElement<"client"> = <
             fn(element, k);
           }
         } else if (k.startsWith("aria")) {
-          const property = "aria-" + k.slice(4).toLowerCase();
+          const property = "aria-" + kebabize(k.slice(4));
           element.setAttribute(property, v + "");
         } else if (k.startsWith("data")) {
-          const property = "data-" + k.slice(4).toLowerCase();
+          const property = "data-" + kebabize(k.slice(4));
           element.setAttribute(property, v + "");
         } else if (k === "className" || k === "class") {
           const classValue = v as HTMLFactory.ClassNameValue;
-          if (classValue == null) {
+          if (classValue == null || classValue === false) {
             return;
           }
           if (Array.isArray(classValue)) {

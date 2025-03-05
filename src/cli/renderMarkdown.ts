@@ -6,6 +6,7 @@ import type {
   RootContent,
   Parent,
   Image,
+  InlineCode,
 } from "npm:@types/mdast";
 import {
   type MdxJsxAttribute,
@@ -65,22 +66,59 @@ export type ComponentMap = Record<
   ) => Promise<Node | string> | Node | string
 >;
 
+const isInlinecode = (node: Node): node is InlineCode =>
+  node && "type" in node && node.type === "inlineCode";
+
+const isImageType = (node: Node): node is Image =>
+  node && "type" in node && node.type === "image";
+
 function remarkCustomComponentExtractor(componentsMap?: ComponentMap) {
   const extractComponents = async <T extends Node>(
     node: T,
     index?: number,
     parent?: Parent
   ): Promise<Node | Node[]> => {
-    const _children = "children" in node && Array.isArray(node.children) && node.children.length > 0 ? node.children : [];
-    const children = ((
-      node &&
-      _children.length > 0
-    ) ? await Promise.all(
-      _children.map((child, index) =>
-          extractComponents(child, index, node as unknown as Parent)
-        )
-      ) : []).flat(1)
-    
+    const _children =
+      "children" in node &&
+      Array.isArray(node.children) &&
+      node.children.length > 0
+        ? node.children
+        : [];
+    const children = (
+      node && _children.length > 0
+        ? await Promise.all(
+            _children.map((child, index) =>
+              extractComponents(child, index, node as unknown as Parent)
+            )
+          )
+        : []
+    ).flat(1);
+
+    if (isInlinecode(node)) {
+      const value = node.value;
+      const isGodotIcon = /^[A-Z][A-Za-z\d]+$/.test(value);
+      const hasRenderer = componentsMap && "IconGodot" in componentsMap;
+      if (isGodotIcon && hasRenderer) {
+        const result = await componentsMap["IconGodot"](
+          { name: value, currentColor: false, asMask: false, content: value },
+          node as unknown as ProcessedJSXNode
+        );
+        return {
+          type: "html",
+          value: result,
+        } as Html;
+      } else {
+        return {
+          type: "html",
+          value: `<code class="language-gdscript">${value}</code>`,
+        } as Html;
+      }
+    }
+
+    if(isImageType(node)) {
+      node.url = "/" + node.url.replace(/^\/+/, "");
+    }
+
     if (
       !(isMdxJsxFlowElement(node) || isMdxJsxTextElement(node)) ||
       typeof index === "undefined" ||
@@ -88,7 +126,7 @@ function remarkCustomComponentExtractor(componentsMap?: ComponentMap) {
       node.name == null ||
       node.name === ""
     ) {
-      if(_children.length > 0){
+      if (children.length > 0) {
         (node as unknown as Parent).children = children as RootContent[];
       }
       return node;
@@ -136,7 +174,7 @@ function remarkCustomComponentExtractor(componentsMap?: ComponentMap) {
         hName,
         hProperties,
       },
-      children: node.children,
+      children,
     };
 
     if (!componentsMap || !(node.name in componentsMap)) {
@@ -165,18 +203,18 @@ function remarkCustomComponentExtractor(componentsMap?: ComponentMap) {
         type: "html",
         value: parts[0],
       } as Html,
-      ...newNode.children,
+      ...children,
       {
         type: "html",
         value: parts[1],
       } as Html,
-    ]
+    ];
     return newNodes;
   };
 
   const plugin: Plugin<[], Root> = () => {
     const processor = async (tree: Root) => {
-      await extractComponents(tree)
+      await extractComponents(tree);
     };
     return processor;
   };

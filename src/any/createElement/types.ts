@@ -7,45 +7,39 @@ export declare namespace HTMLFactory {
   /**
    * All possible values for a `class` property
    */
-  export type ClassNameValue = string | undefined | (string | undefined)[];
-  
+  export type ClassNameValue = string | undefined | false | (string | undefined | false)[];
+
   /**
    * Properties of HTML entities that aren't valid HTML attributes.
    * This can be custom properties on web components, or monkey-patched properties.
    * TODO: type this properly some day
    */
   export type Props = Record<string, unknown>;
-  
 
   type DOMEventHandler<K extends keyof ElementEventMap> = (
-    event: ElementEventMap[K],
+    event: ElementEventMap[K]
   ) => void;
-  
 
-  export type Attributes<T extends keyof HTMLElementTagNameMap, E extends HTMLElement = HTMLElementTagNameMap[T]> =
-  & Partial<
-    {
-      [K in keyof E]: E[K] | BindedFunction;
-    }
-  >
-  & {
+  export type Attributes<
+    T extends keyof HTMLElementTagNameMap,
+    E extends HTMLElement = HTMLElementTagNameMap[T]
+  > = Partial<{
+    [K in Exclude<keyof E, "class" | "className">]: E[K]; //| BindedFunction;
+  }> & {
     [K in `on${Capitalize<keyof ElementEventMap>}`]?: DOMEventHandler<
       Uncapitalize<K extends `on${infer E}` ? E : never>
     >;
-  }
-  & {
+  } & {
     class?: ClassNameValue;
     className?: ClassNameValue;
     classList?: ClassNameValue;
     [key: `data${string}`]: string | number | boolean | null | undefined;
     [key: `aria${string}`]: string | number | boolean | null | undefined;
   } & {
-    props?: Props
-  }
+    props?: Props;
+  };
 
-
-
-  export { BindedFunction }
+  export { BindedFunction };
   export type ValidChild =
     | SerializedElement<keyof HTMLElementTagNameMap>
     | HTMLElement

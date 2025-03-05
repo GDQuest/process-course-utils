@@ -2,6 +2,7 @@ import "../../web/browserTypes.d.ts";
 import { HTMLFactory } from "./types.ts";
 import { escapeHTML } from "../escapeHTML.ts";
 import { isSelfClosingTag } from "./isSelfClosingTag.ts";
+import { kebabize } from "../kebabize.ts";
 
 // import { functionRegistry } from "./functionRegistery.ts";
 
@@ -51,10 +52,10 @@ export const createElementString: HTMLFactory.CreateElement<"server"> = <
                   }
                   */
           } else if (k.startsWith("aria")) {
-            const property = "aria-" + k.slice(4).toLowerCase();
+            const property = "aria-" + kebabize(k.slice(4));
             return `${property}="${escapeHTML(v + "")}"`;
           } else if (k.startsWith("data")) {
-            const property = "data-" + k.slice(4).toLowerCase();
+            const property = "data-" + kebabize(k.slice(4));
             return `${property}="${escapeHTML(v + "")}"`;
           } else if (k === "className" || k === "class") {
             const classValue = v as HTMLFactory.ClassNameValue;
@@ -62,7 +63,7 @@ export const createElementString: HTMLFactory.CreateElement<"server"> = <
             if (Array.isArray(classValue)) {
               classProp = classValue.filter(Boolean).join(" ");
             } else {
-              if (classProp != null) {
+              if (classValue != null && classValue !== false) {
                 classProp = classValue + "";
               }
             }
@@ -94,7 +95,7 @@ export const createElementString: HTMLFactory.CreateElement<"server"> = <
       } else if (Array.isArray(child)) {
         return createElementString(...child);
       } else if (typeof child === "string" || typeof child === "number") {
-        return escapeHTML(child + "");
+        return child
       } else if (typeof child === "function") {
         throw new Error(
           "Function children are not supported in server-side rendering"
