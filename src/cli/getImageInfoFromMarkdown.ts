@@ -2,15 +2,20 @@ import { dirname, join, relative as getRelative } from "jsr:@std/path";
 import {
   getImageDimensionsFromFilePath,
   augmentImageDimensions,
+  filePathIsSupportedImageType,
   type ImageDimensionsAugmented,
 } from "./getImageDimensions/mod.ts";
 
-export type ImageResourceInfo = ImageDimensionsAugmented & {
+
+export type ResourceInfo = {
   filePath: string;
   relPath: string;
   originalSrc: string;
   newSrc: string;
 };
+export type ImageResourceInfo = ImageDimensionsAugmented & ResourceInfo
+
+export type AnyResourceInfo = ImageResourceInfo | ResourceInfo;
 
 /**
  * Given an image src relative to a file, returns size information about the image.
@@ -24,21 +29,44 @@ export async function getImageInfoFromMarkdown(
   markdownFilePath: string,
   rootDirectoryPath: string
 ): Promise<ImageResourceInfo | undefined> {
-  const filePath = imageHTMLSrc.startsWith("/")
-    ? imageHTMLSrc
-    : join(dirname(markdownFilePath), imageHTMLSrc);
+  
+  const info = await getFileInfoFromMarkdown(imageHTMLSrc, markdownFilePath, rootDirectoryPath);
+  
+  if ('ratio' in info) {
+    return info
+  }
+}
 
-  const imageInfo = await getImageDimensionsFromFilePath(filePath);
+
+export async function getFileInfoFromMarkdown(
+  fileHTMLSrc: string,
+  markdownFilePath: string,
+  rootDirectoryPath: string
+):Promise<ImageResourceInfo| ResourceInfo>{
+  const filePath = fileHTMLSrc.startsWith("/")
+    ? fileHTMLSrc
+    : join(dirname(markdownFilePath), fileHTMLSrc);
+
   const relPath = getRelative(rootDirectoryPath, filePath);
   const newSrc = relPath;
 
-  if (imageInfo != undefined) {
-    return {
-      ...augmentImageDimensions(imageInfo),
-      filePath,
-      relPath,
-      newSrc,
-      originalSrc: imageHTMLSrc,
-    };
+  const info = {
+    filePath,
+    relPath,
+    newSrc,
+    originalSrc: fileHTMLSrc,
+  } as ResourceInfo;
+
+  if (filePathIsSupportedImageType(filePath)) {
+    const imageInfo = await getImageDimensionsFromFilePath(info.filePath);
+    if (imageInfo) {
+      return {
+        ...augmentImageDimensions(imageInfo),
+        ...info,
+      } as ImageResourceInfo
+    }
   }
+
+  return info;
+
 }

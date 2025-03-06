@@ -22,6 +22,11 @@ export const supportedImageTypes = new Map(
   _supportedImageTypes.map((type) => [type, true as const])
 );
 
+export const filePathIsSupportedImageType = (filePath: string) => {
+  const ext = filePath.split(".").pop()?.toLowerCase();
+  return supportedImageTypes.has(ext as SupportedImageType);
+}
+
 export const getImageDimensionsFromData = (bytes: Uint8Array) => {
   // The shortest signature is 3 bytes.
   if (bytes.length < 3) {

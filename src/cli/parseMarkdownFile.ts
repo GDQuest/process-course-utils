@@ -1,4 +1,4 @@
-import { ImageResourceInfo } from "./getImageInfoFromMarkdown.ts";
+import { AnyResourceInfo } from "./getImageInfoFromMarkdown.ts";
 import { parse as parseYaml } from "jsr:@std/yaml";
 import { isPlainObject } from "../any/isPlainObject.ts";
 import { renderMarkdown, type ComponentMap } from "./renderMarkdown.ts";
@@ -24,7 +24,7 @@ export async function parseMarkdownFile(
   addExternalResource: (
     filePath: string,
     src: string
-  ) => Promise<ImageResourceInfo>,
+  ) => Promise<AnyResourceInfo>,
   componentsMap?: ComponentMap
 ) {
   const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/;

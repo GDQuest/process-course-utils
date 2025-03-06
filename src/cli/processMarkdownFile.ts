@@ -1,6 +1,6 @@
 import { transformCustomHTMLTags } from "../any/transformCustomHTMLTags/mod.ts";
 import { parseMarkdownFile } from "./parseMarkdownFile.ts";
-import { ImageResourceInfo } from "./getImageInfoFromMarkdown.ts";
+import { AnyResourceInfo } from "./getImageInfoFromMarkdown.ts";
 import type { ComponentMap } from "./renderMarkdown.ts";
 
 /**
@@ -18,7 +18,7 @@ export async function processMarkdownFile(
   addExternalResource: (
     filePath: string,
     src: string
-  ) => Promise<ImageResourceInfo>,
+  ) => Promise<AnyResourceInfo>,
   correctMarkdownInPlace: boolean,
   componentsMap?: ComponentMap,
 ) {

@@ -7,7 +7,7 @@ import type {
   Parent,
   Image,
   InlineCode,
-  Code
+  // Code
 } from "npm:@types/mdast";
 import {
   type MdxJsxAttribute,
@@ -24,7 +24,7 @@ import remarkMdx from "https://esm.sh/remark-mdx@3.0.0";
 import rehypePrism from 'https://esm.sh/rehype-prism-plus@2.0.0'
 import { componentsMap as defaultComponentMap } from "../any/transformCustomHTMLTags/componentsMap.ts";
 import { VFile } from "https://esm.sh/vfile@6.0.3";
-import { ImageResourceInfo } from "./getImageInfoFromMarkdown.ts";
+import { AnyResourceInfo } from "./getImageInfoFromMarkdown.ts";
 
 /**
  * Verifies a node is a an html Element
@@ -72,16 +72,20 @@ const isInlinecode = (node: Node): node is InlineCode =>
   node && "type" in node && node.type === "inlineCode";
 
 const isImageType = (node: Node): node is Image =>
-  node && "type" in node && node.type === "image";
+   node && "type" in node && node.type === "image";
 
-const isCodeBlock = (node: Node): node is Code =>
-  node && "type" in node && node.type === "code";
+// const isCodeBlock = (node: Node): node is Code =>
+//   node && "type" in node && node.type === "code";
 
-function remarkCustomComponentExtractor(componentsMap?: ComponentMap) {
+function remarkCustomComponentExtractor(componentsMap: ComponentMap, addExternalResource: (
+  file: string,
+  src: string
+) => Promise<AnyResourceInfo>) {
   const extractComponents = async <T extends Node>(
     node: T,
+    file: VFile,
     index?: number,
-    parent?: Parent
+    parent?: Parent,
   ): Promise<Node | Node[]> => {
     const _children =
       "children" in node &&
@@ -93,7 +97,7 @@ function remarkCustomComponentExtractor(componentsMap?: ComponentMap) {
       node && _children.length > 0
         ? await Promise.all(
             _children.map((child, index) =>
-              extractComponents(child, index, node as unknown as Parent)
+              extractComponents(child, file, index, node as unknown as Parent)
             )
           )
         : []
@@ -120,8 +124,13 @@ function remarkCustomComponentExtractor(componentsMap?: ComponentMap) {
       }
     }
 
-    if(isImageType(node)) {
-      node.url = "/" + node.url.replace(/^\/+/, "");
+    if(isImageType(node) && node.url != null){
+      const result = await addExternalResource(file.path, node.url);
+      if (result != null) {
+        node.url = result.newSrc;
+        
+      }
+      return node
     }
 
     /* * /
@@ -198,6 +207,13 @@ function remarkCustomComponentExtractor(componentsMap?: ComponentMap) {
       children,
     };
 
+    if(node.name === "VideoFile" && newNode.data.hProperties.src && typeof newNode.data.hProperties.src === "string" && newNode.data.hProperties.src !== ""){
+      const result = await addExternalResource(file.path, newNode.data.hProperties.src);
+      if(result != null){
+        newNode.data.hProperties.src = result.newSrc;
+      }
+    }
+
     if (!componentsMap || !(node.name in componentsMap)) {
       return newNode;
     }
@@ -234,8 +250,8 @@ function remarkCustomComponentExtractor(componentsMap?: ComponentMap) {
   };
 
   const plugin: Plugin<[], Root> = () => {
-    const processor = async (tree: Root) => {
-      await extractComponents(tree);
+    const processor = async (tree: Root, file: VFile) => {
+      await extractComponents(tree, file);
     };
     return processor;
   };
@@ -251,7 +267,7 @@ interface RemarkExternalResourcesCollectorOptions {
   addExternalResource: (
     file: string,
     src: string
-  ) => Promise<ImageResourceInfo>;
+  ) => Promise<AnyResourceInfo>;
 }
 
 function remarkExternalResourcesCollector({
@@ -269,8 +285,32 @@ function remarkExternalResourcesCollector({
         const result = await addExternalResource(file.path, node.url);
         if (result != null) {
           node.url = result.newSrc;
+          
         }
       },
+      VideoFile: async (node: MdxJsxFlowElement, file: VFile) => {
+        const src = node.attributes.find(
+          (attr) => {
+            if (isMdxJsxExpressionAttribute(attr)) {
+              throw new Error(
+                `Dynamic attributes are not supported (${attr.value})`
+              );
+            }
+            return attr.name === "src"}
+        )?.value as string;
+        if (src == null || typeof src !== "string" || src === "") {
+          return;
+        }
+        const result = await addExternalResource(file.path, src);
+        if(result != null){
+          node.attributes = node.attributes.map(attr => {
+            if(isMdxJsxAttribute(attr) && attr.name === "src"){
+              return { ...attr, value: result.newSrc };
+            }
+            return attr;
+          });
+        }
+      }
     };
 
     const mapToHandlers = async (node: Node, file: VFile) => {
@@ -289,6 +329,8 @@ function remarkExternalResourcesCollector({
         node.type in handlers
       ) {
         return await handlers[node.type](node, file);
+      }else if((isMdxJsxFlowElement(node) || isMdxJsxTextElement(node)) && node.name && node.name in handlers){
+        return await handlers[node.name](node, file);
       }
       return;
     };
@@ -314,8 +356,8 @@ export async function renderMarkdown(
   addExternalResource: (
     filePath: string,
     src: string
-  ) => Promise<ImageResourceInfo>,
-  componentsMap: ComponentMap = defaultComponentMap as any
+  ) => Promise<AnyResourceInfo>,
+  componentsMap: ComponentMap = defaultComponentMap as any,
 ) {
   const vfile = new VFile({ path, value: markdownString });
 
@@ -323,8 +365,8 @@ export async function renderMarkdown(
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkMdx)
-    .use(remarkExternalResourcesCollector({ addExternalResource }))
-    .use(remarkCustomComponentExtractor(componentsMap))
+    //.use(remarkExternalResourcesCollector({ addExternalResource }))
+    .use(remarkCustomComponentExtractor(componentsMap, addExternalResource))
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypePrism as any)
     .use(rehypeUnwrapImages)
