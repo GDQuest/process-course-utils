@@ -7,7 +7,7 @@ export declare namespace HTMLFactory {
   /**
    * All possible values for a `class` property
    */
-  export type ClassNameValue = string | undefined | false | (string | undefined | false)[];
+  export type ClassNameValue = string | undefined | false | (string | undefined | false)[] | ClassNameValue[];
 
   /**
    * Properties of HTML entities that aren't valid HTML attributes.
@@ -33,8 +33,8 @@ export declare namespace HTMLFactory {
     class?: ClassNameValue;
     className?: ClassNameValue;
     classList?: ClassNameValue;
-    [key: `data${string}`]: string | number | boolean | null | undefined;
-    [key: `aria${string}`]: string | number | boolean | null | undefined;
+    [key: `data${Capitalize<string>}${string}`]: string | number | boolean | null | undefined;
+    [key: `aria${Capitalize<string>}${string}`]: string | number | boolean | null | undefined;
   } & {
     props?: Props;
   };

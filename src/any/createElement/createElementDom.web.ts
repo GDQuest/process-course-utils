@@ -37,7 +37,8 @@ export const createElementDom: HTMLFactory.CreateElement<"client"> = <
             return;
           }
           if (Array.isArray(classValue)) {
-            const classes = classValue.filter(Boolean) as string[];
+            // @ts-expect-error Typescript can't handle infinity
+            const classes = classValue.flat(Infinity).filter(Boolean) as string[];
             element.classList.add(...classes);
           } else {
             if (classValue.includes(" ")) {

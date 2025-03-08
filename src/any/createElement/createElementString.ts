@@ -61,7 +61,7 @@ export const createElementString: HTMLFactory.CreateElement<"server"> = <
             const classValue = v as HTMLFactory.ClassNameValue;
             let classProp = "";
             if (Array.isArray(classValue)) {
-              classProp = classValue.filter(Boolean).join(" ");
+              classProp = classValue.flat(Infinity).filter(Boolean).join(" ");
             } else {
               if (classValue != null && classValue !== false) {
                 classProp = classValue + "";
