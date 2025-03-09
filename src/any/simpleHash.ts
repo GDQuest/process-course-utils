@@ -8,7 +8,7 @@ const characters = "abcdefghijklmnopqrstuvwxyz";
  * @param length The length of the hash to return. Defaults to 8.
  * @returns
  */
-export function hash(input: string, length = 8) {
+export function simpleHash(input: string, length = 8) {
   let hash = 0;
   // Use only the first 20 chars max for better performance
   const str = input.slice(0, 20);

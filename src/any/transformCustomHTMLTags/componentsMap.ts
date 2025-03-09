@@ -1,4 +1,4 @@
-import { hash } from "../hash.ts";
+import { simpleHash } from "../simpleHash.ts";
 import { slugify } from "../slugify.ts";
 
 export const componentsMap = {
@@ -46,7 +46,7 @@ export const componentsMap = {
   }) => {
     const openClass = open ? " initially-open" : "";
     const typeClass = `gdquest-callout__${type}`;
-    const id = `callout-${slugify(title)}-${hash(hasContents)}`;
+    const id = `callout-${slugify(title)}-${simpleHash(hasContents)}`;
     return (
       `<dl className="gdquest-callout">\n` + // if multiple callouts, it'd be good to put them all under a single dl
       `<dt className="gdquest-callout-summary ${typeClass}" suppressHydrationWarning={true}>` +

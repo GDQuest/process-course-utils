@@ -61,6 +61,7 @@ export const createElementString: HTMLFactory.CreateElement<"server"> = <
             const classValue = v as HTMLFactory.ClassNameValue;
             let classProp = "";
             if (Array.isArray(classValue)) {
+              // @ts-expect-error typescript doesn't deal with infinite recursion
               classProp = classValue.flat(Infinity).filter(Boolean).join(" ");
             } else {
               if (classValue != null && classValue !== false) {

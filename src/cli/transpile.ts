@@ -1,6 +1,7 @@
 import {
   transpile as _transpile,
   bundle as _bundle,
+  BundleOptions,
 } from "jsr:@deno/emit@0.46.0";
 
 /**
@@ -25,9 +26,10 @@ export const typeScriptBundle = async (filePath: string | URL) => {
 export const typescriptBundleAndWrite = async (
   filePath: string | URL,
   outFile: string | URL,
-  dryRun: boolean
+  dryRun: boolean,
+  options: BundleOptions,
 ) => {
-  const { code } = await _bundle(filePath);
+  const { code } = await _bundle(filePath, options);
   if (dryRun) {
     return;
   }
