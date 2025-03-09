@@ -108,6 +108,8 @@ interface ParseFlagsOptions<
 /**
  * Returns a set of flags parsed from the command line arguments, with some utility functions to print help, version, etc.
  * All paths marked as `path` in the spec are resolved to absolute paths, no need to resolve them manually.
+ * 
+ * You do not have to provide a spec for all flags. Flags without a spec will still be collected, but they won't show in the help text.
  * @param options
  */
 export function parseFlags<
