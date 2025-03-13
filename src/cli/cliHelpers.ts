@@ -1,6 +1,7 @@
 import { resolve } from "jsr:@std/path@^1.0.7/resolve";
 import * as cli from "jsr:@std/cli";
 import { ConsoleHandler, LogRecord, setup as setupLogger } from "jsr:@std/log";
+import { toJsonStringNoCicularReferences } from "../any/toJsonStringNoCircularReferences.ts";
 
 /**
  * A structure that describes a flag that can be passed to a CLI program.
@@ -235,7 +236,7 @@ export function enableConsoleLogging(...names: string[]) {
           }
           return (
             `${levelIcons[levelName]} [${loggerName}] ${msg}` +
-            (args && args.length ? `${JSON.stringify(args, null, 2)}` : "")
+            (args && args.length ? `${toJsonStringNoCicularReferences(args, { spaces: 2 })}` : "")
           );
         },
       }),
