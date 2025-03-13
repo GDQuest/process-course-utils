@@ -27,6 +27,18 @@ const parseUrl = function (url: string): URL | null {
   }
 };
 
+const formatSassMessage = (message: string, span?: sass.SourceSpan) => {
+  if (!span) {
+    return message;
+  }
+  const {
+    start: { line, column },
+    url,
+  } = span;
+  const fileName = url ? url.pathname : "|";
+  return `${fileName}:${line}:${column}\n   ${message}`;
+};
+
 export async function compileSassFile(
   { inputPath, outputPath, logger, ...options }: Options,
   dryRun: boolean
@@ -55,12 +67,12 @@ export async function compileSassFile(
   const sassOptions: sass.Options<"sync"> = {
     ...options,
     logger: {
-      warn,
-      debug: info,
+      warn: (message, { span }) => warn(formatSassMessage(message, span)),
+      debug: (message, { span }) => info(formatSassMessage(message, span)),
     },
   };
 
-  info(`compiling Sass file ${inputPath} to ${outputPath}`, sassOptions);
+  info(`compiling Sass file ${inputPath} to ${outputPath}`);
 
   const result = sass.compile(inputPath, sassOptions);
 
