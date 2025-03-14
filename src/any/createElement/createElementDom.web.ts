@@ -1,4 +1,5 @@
 import "../../web/browserTypes.d.ts";
+import { isHTMLBooleanAttribute } from './htmlBooleanAttributes.ts';
 import { HTMLFactory } from "./types.ts";
 import { kebabize } from "../kebabize.ts";
 
@@ -53,7 +54,7 @@ export const createElementDom: HTMLFactory.CreateElement<"client"> = <
             // @ts-expect-error: this is an escape hatch
             element[prop] = value;
           });
-        } else if( v === false && k === "open"){
+        } else if( v === false && isHTMLBooleanAttribute(k)) {
           return
         } else {
           element.setAttribute(k, v + "");

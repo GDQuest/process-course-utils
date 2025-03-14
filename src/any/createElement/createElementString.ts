@@ -1,3 +1,4 @@
+import { isHTMLBooleanAttribute } from './htmlBooleanAttributes.ts';
 import "../../web/browserTypes.d.ts";
 import { HTMLFactory } from "./types.ts";
 import { escapeHTML } from "../escapeHTML.ts";
@@ -61,7 +62,7 @@ export const createElementString: HTMLFactory.CreateElement<"server"> = <
             const classValue = v as HTMLFactory.ClassNameValue;
             let classProp = "";
             if (Array.isArray(classValue)) {
-              // @ts-expect-error typescript doesn't deal with infinite recursion
+              // /@ts-expect-error typescript doesn't deal with infinite recursion
               classProp = classValue.flat(Infinity).filter(Boolean).join(" ");
             } else {
               if (classValue != null && classValue !== false) {
@@ -77,7 +78,7 @@ export const createElementString: HTMLFactory.CreateElement<"server"> = <
                   `data-prop-${prop}="${escapeHTML(value + "")}"`
               )
               .join(" ");
-          } else if( v === false && (k === "open" || k === 'checked')){
+          } else if( v === false && isHTMLBooleanAttribute(k)){
             return false;
           }
           else {
