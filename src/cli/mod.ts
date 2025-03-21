@@ -1,6 +1,7 @@
 export * from './devServer/mod.ts'
 export * from './getImageDimensions/mod.ts'
 export * from './cliHelpers.ts'
+export * from './dieIfNotServer.ts'
 export * from './downloadAndExtractFile.ts'
 export * from './ensureBinaryExistsOrDownload.ts'
 export * from './ensureDirExists.ts'

@@ -32,7 +32,8 @@
     "npm:estree-walker@3.0.3": "3.0.3",
     "npm:image-dimensions@*": "2.3.0",
     "npm:meriyah@6.0.5": "6.0.5",
-    "npm:sass@^1.80.6": "1.83.0"
+    "npm:sass@^1.80.6": "1.83.0",
+    "npm:zod-form-data@*": "2.0.7_zod@3.23.8"
   },
   "jsr": {
     "@davidbonnet/astring@1.8.6": {
@@ -200,6 +201,9 @@
         "node-addon-api"
       ]
     },
+    "@rvf/set-get@7.0.1": {
+      "integrity": "sha512-GkTSn9K1GrTYoTUqlUs36k6nJnzjQaFBTTEIqUYmzBcsGsoJM8xG7EAx2WLHWAA4QzFjcwWUSHQ3vM3Fbw50Tg=="
+    },
     "@types/estree@1.0.6": {
       "integrity": "sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw=="
     },
@@ -302,6 +306,16 @@
     },
     "undici-types@6.19.8": {
       "integrity": "sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw=="
+    },
+    "zod-form-data@2.0.7_zod@3.23.8": {
+      "integrity": "sha512-O27uzKMx7qc7z51KXER326Fp966jqHGvZX3i18CbvElF/QqVsQQN6Q7BnzepkzeBzTJnU3golibVSagf4dp7RQ==",
+      "dependencies": [
+        "@rvf/set-get",
+        "zod"
+      ]
+    },
+    "zod@3.23.8": {
+      "integrity": "sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g=="
     }
   }
 }
